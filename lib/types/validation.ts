@@ -57,13 +57,29 @@ export const digilockerInitiateSchema = z.object({
   roomId: z.string().startsWith("ROOM-"),
   propertyId: z.string().startsWith("PROP-"),
   role: z.enum(PERSON_ROLES).default("PRIMARY"),
+  verifiedMobile: z.string().regex(/^\d{10}$/).optional(),
+  contactPhone: z.string().regex(/^\d{10}$/).optional(),
+});
+
+export const aadhaarOtpInitiateSchema = z.object({
+  roomId: z.string().startsWith("ROOM-"),
+  propertyId: z.string().startsWith("PROP-"),
+  role: z.enum(PERSON_ROLES).default("PRIMARY"),
+  aadhaarNumber: z.string().regex(/^\d{12}$/),
+  contactPhone: z.string().regex(/^\d{10}$/).optional(),
+  consent: z.literal(true),
+});
+
+export const aadhaarOtpVerifySchema = z.object({
+  state: z.string().min(1),
+  otp: z.string().regex(/^\d{6}$/),
 });
 
 export const createTenantSchema = z.object({
   roomId: z.string().startsWith("ROOM-"),
   propertyId: z.string().startsWith("PROP-"),
   sessionState: z.string().min(1),
-  phone: z.string().min(10).max(15),
+  phone: z.string().min(10).max(15).optional(),
   moveInDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   emergencyContact: z.string().optional(),
   role: z.enum(PERSON_ROLES).default("PRIMARY"),

@@ -7,6 +7,7 @@ export interface DigilockerProfilePayload {
   gender: string;
   address: string;
   maskedAadhaar: string;
+  phone?: string;
   photoBlobKey: string;
   aadhaarXmlBlobKey?: string;
   digilockerSub?: string;
@@ -23,6 +24,7 @@ export interface SessionEntity {
   state: string;
   status: SessionStatus;
   expiresAt: string;
+  contactPhone?: string;
   profilePayload?: string;
 }
 
@@ -34,6 +36,7 @@ export async function createOAuthSession(
     role: PersonRole;
     pkceVerifier: string;
     state: string;
+    contactPhone?: string;
   },
 ): Promise<SessionEntity> {
   const client = getTableClient("Sessions");
@@ -49,6 +52,7 @@ export async function createOAuthSession(
     state: data.state,
     status: "PENDING",
     expiresAt,
+    contactPhone: data.contactPhone ?? "",
   };
   await client.createEntity(entity);
   return entity;
@@ -60,6 +64,24 @@ export async function getOAuthSession(
   const client = getTableClient("Sessions");
   const iter = client.listEntities<SessionEntity>({
     queryOptions: { filter: `RowKey eq 'SESSION-${state}'` },
+  });
+  for await (const entity of iter) {
+    const session = entity as SessionEntity;
+    if (new Date(session.expiresAt) < new Date()) {
+      await updateSessionStatus(session.partitionKey, session.rowKey, "EXPIRED");
+      return null;
+    }
+    return session;
+  }
+  return null;
+}
+
+export async function getOAuthSessionByPkceVerifier(
+  pkceVerifier: string,
+): Promise<SessionEntity | null> {
+  const client = getTableClient("Sessions");
+  const iter = client.listEntities<SessionEntity>({
+    queryOptions: { filter: `pkceVerifier eq '${pkceVerifier}'` },
   });
   for await (const entity of iter) {
     const session = entity as SessionEntity;

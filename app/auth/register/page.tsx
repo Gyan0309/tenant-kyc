@@ -53,11 +53,11 @@ export default function RegisterPage() {
 
     if (signInResult?.error) {
       toast.success("Account created. Please sign in.");
-      router.push("/login");
+      router.push("/auth/login");
       return;
     }
 
-    router.push("/");
+    router.push("/dashboard");
     router.refresh();
   }
 
@@ -88,7 +88,7 @@ export default function RegisterPage() {
           </Button>
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="underline">
+            <Link href="/auth/login" className="underline">
               Sign in
             </Link>
           </p>

@@ -20,14 +20,22 @@ function getConnectionString(): string {
   return cs;
 }
 
+function tableClientOptions(cs: string) {
+  return /^DefaultEndpointsProtocol=http;|http:\/\/127\.0\.0\.1|http:\/\/localhost/.test(cs)
+    ? { allowInsecureConnection: true }
+    : undefined;
+}
+
 const clients = new Map<TableName, TableClient>();
 
 export function getTableClient(tableName: TableName): TableClient {
   let client = clients.get(tableName);
   if (!client) {
+    const cs = getConnectionString();
     client = TableClient.fromConnectionString(
-      getConnectionString(),
+      cs,
       tableName,
+      tableClientOptions(cs),
     );
     clients.set(tableName, client);
   }
@@ -37,7 +45,7 @@ export function getTableClient(tableName: TableName): TableClient {
 export async function ensureTablesExist(): Promise<void> {
   const cs = getConnectionString();
   for (const name of TABLE_NAMES) {
-    const client = TableClient.fromConnectionString(cs, name);
+    const client = TableClient.fromConnectionString(cs, name, tableClientOptions(cs));
     try {
       await client.createTable();
     } catch (err: unknown) {

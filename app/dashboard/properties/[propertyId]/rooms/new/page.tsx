@@ -38,7 +38,7 @@ export default function NewRoomPage() {
 
     const data = await res.json();
     toast.success("Room created");
-    router.push(`/properties/${params.propertyId}/rooms/${data.id}`);
+    router.push(`/dashboard/properties/${params.propertyId}/rooms/${data.id}`);
   }
 
   return (

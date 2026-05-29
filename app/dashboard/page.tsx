@@ -25,7 +25,7 @@ export default async function DashboardPage() {
             Manage your rental properties and tenant verification
           </p>
         </div>
-        <Link href="/properties/new" className={cn(buttonVariants())}>
+        <Link href="/dashboard/properties/new" className={cn(buttonVariants())}>
           Add property
         </Link>
       </div>
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/properties/new" className={cn(buttonVariants())}>
+            <Link href="/dashboard/properties/new" className={cn(buttonVariants())}>
               Create property
             </Link>
           </CardContent>
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {properties.map((p) => (
-            <Link key={p.rowKey} href={`/properties/${p.rowKey}`}>
+            <Link key={p.rowKey} href={`/dashboard/properties/${p.rowKey}`}>
               <Card className="hover:border-primary/50 transition-colors h-full">
                 <CardHeader>
                   <CardTitle>{p.name}</CardTitle>

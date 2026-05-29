@@ -41,7 +41,7 @@ export default async function RoomPage({
           </p>
         </div>
         <Link
-          href={`/properties/${propertyId}/rooms/${roomId}/add-person`}
+          href={`/dashboard/properties/${propertyId}/rooms/${roomId}/add-person`}
           className={cn(buttonVariants())}
         >
           Add tenant
@@ -71,7 +71,7 @@ export default async function RoomPage({
                 <div className="flex items-center gap-2">
                   <VerifiedBadge verified={p.isVerified} />
                   <Link
-                    href={`/tenants/${p.rowKey}`}
+                    href={`/dashboard/tenants/${p.rowKey}`}
                     className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
                   >
                     View

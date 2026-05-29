@@ -1,15 +1,16 @@
 import { NextRequest } from "next/server";
 import { requireOwner } from "@/lib/auth/session";
-import { digilockerInitiateSchema } from "@/lib/types/validation";
+import { aadhaarOtpInitiateSchema } from "@/lib/types/validation";
 import { handleApiError, jsonError } from "@/lib/api/errors";
-import { getSandboxConfig } from "@/lib/sandbox/config";
+import { findRoomById } from "@/lib/azure/repos/rooms";
+import { createOAuthSession } from "@/lib/azure/repos/sessions";
 import { generateRandomString } from "@/lib/digilocker/pkce";
 import {
-  digilockerSessionReference,
-  initiateSandboxDigiLocker,
+  aadhaarReference,
+  generateAadhaarOtp,
+  maskAadhaar,
 } from "@/lib/sandbox/kyc";
-import { createOAuthSession } from "@/lib/azure/repos/sessions";
-import { findRoomById } from "@/lib/azure/repos/rooms";
+import { getSandboxConfig } from "@/lib/sandbox/config";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,38 +32,29 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const data = digilockerInitiateSchema.parse(body);
+    const data = aadhaarOtpInitiateSchema.parse(body);
 
     const room = await findRoomById(data.roomId);
     if (!room || room.ownerId !== ownerId || room.propertyId !== data.propertyId) {
       return jsonError("Room not found", 404);
     }
 
-    const state = generateRandomString(32);
-    const baseUrl =
-      process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-    const redirectUrl = new URL(
-      "/api/verify/digilocker/callback",
-      baseUrl,
-    );
-    redirectUrl.searchParams.set("local_state", state);
-    redirectUrl.searchParams.set("role", data.role);
-
-    const sandboxSession = await initiateSandboxDigiLocker({
-      redirectUrl: redirectUrl.toString(),
-      verifiedMobile: data.verifiedMobile ?? data.contactPhone,
+    const otp = await generateAadhaarOtp({
+      aadhaarNumber: data.aadhaarNumber,
+      reason: "Tenant KYC verification",
     });
+    const state = generateRandomString(32);
 
     await createOAuthSession(ownerId, {
       roomId: data.roomId,
       propertyId: data.propertyId,
       role: data.role,
-      pkceVerifier: digilockerSessionReference(sandboxSession.sessionId),
+      pkceVerifier: `${aadhaarReference(otp.referenceId)}:${maskAadhaar(data.aadhaarNumber)}`,
       state,
-      contactPhone: data.contactPhone ?? data.verifiedMobile,
+      contactPhone: data.contactPhone,
     });
 
-    return Response.json({ authUrl: sandboxSession.authUrl, state });
+    return Response.json({ state, message: "OTP sent" });
   } catch (err) {
     if (err instanceof Error && err.message.startsWith("Sandbox")) {
       console.error(err);

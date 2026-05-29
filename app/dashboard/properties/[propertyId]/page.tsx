@@ -46,7 +46,7 @@ export default async function PropertyPage({
           </p>
         </div>
         <Link
-          href={`/properties/${propertyId}/rooms/new`}
+          href={`/dashboard/properties/${propertyId}/rooms/new`}
           className={cn(buttonVariants())}
         >
           Add room
@@ -85,7 +85,7 @@ export default async function PropertyPage({
                     </TableCell>
                     <TableCell>
                       <Link
-                        href={`/properties/${propertyId}/rooms/${room.rowKey}`}
+                        href={`/dashboard/properties/${propertyId}/rooms/${room.rowKey}`}
                         className={cn(buttonVariants({ variant: "link" }))}
                       >
                         View

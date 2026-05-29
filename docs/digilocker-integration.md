@@ -1,5 +1,9 @@
 # DigiLocker integration guide
 
+> Direct DigiLocker partner OAuth is currently disabled in the app. Active KYC
+> verification runs through Sandbox APIs; see
+> [sandbox-kyc-integration.md](./sandbox-kyc-integration.md).
+
 This app uses **OAuth 2.0 + PKCE** via the MeriPehchaan gateway for tenant identity verification.
 
 ## 1. Partner registration

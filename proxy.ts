@@ -6,7 +6,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   const isAuthPage =
-    pathname.startsWith("/login") || pathname.startsWith("/register");
+    pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register");
   const isPublicApi =
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/owners") ||
@@ -21,11 +21,11 @@ export default auth((req) => {
     !pathname.startsWith("/_next");
 
   if (isDashboard && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
   if (isAuthPage && isLoggedIn) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   if (pathname.startsWith("/api") && !isPublicApi && !isLoggedIn) {

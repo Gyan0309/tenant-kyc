@@ -18,7 +18,7 @@ export interface CreateTenantInput {
   roomId: string;
   propertyId: string;
   sessionState: string;
-  phone: string;
+  phone?: string;
   moveInDate: string;
   emergencyContact?: string;
   role: PersonRole;
@@ -76,7 +76,7 @@ export async function createTenantFromSession(input: CreateTenantInput) {
     dob: input.dob ?? profile.dob,
     gender: input.gender ?? profile.gender,
     maskedAadhaar: input.maskedAadhaar ?? profile.maskedAadhaar,
-    phone: input.phone,
+    phone: input.phone || profile.phone || "",
     address: input.address ?? profile.address,
     photoBlobKey: finalPhotoKey,
     isVerified: true,

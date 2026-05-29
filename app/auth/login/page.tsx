@@ -37,7 +37,7 @@ function LoginForm() {
       toast.error("Invalid email or password");
       return;
     }
-    router.push("/");
+    router.push("/dashboard");
     router.refresh();
   }
 
@@ -73,7 +73,7 @@ function LoginForm() {
           </Button>
           <p className="text-sm text-muted-foreground">
             No account?{" "}
-            <Link href="/register" className="underline">
+            <Link href="/auth/register" className="underline">
               Register
             </Link>
           </p>

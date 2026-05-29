@@ -23,6 +23,7 @@ interface Profile {
   gender: string;
   address: string;
   maskedAadhaar: string;
+  phone?: string;
   photoBlobKey?: string;
 }
 
@@ -44,27 +45,58 @@ export function AddPersonForm({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [digilockerConfigured, setDigilockerConfigured] = useState(true);
+  const [verificationState, setVerificationState] = useState(sessionState ?? "");
+  const [aadhaarNumber, setAadhaarNumber] = useState("");
+  const [aadhaarOtp, setAadhaarOtp] = useState("");
+  const [aadhaarOtpSent, setAadhaarOtpSent] = useState(false);
+  const [aadhaarConsent, setAadhaarConsent] = useState(false);
+  const [contactPhone, setContactPhone] = useState("");
 
-  const loadSession = useCallback(async () => {
-    if (!sessionState) return;
+  const loadSession = useCallback(async (state = verificationState) => {
+    if (!state) return;
     const res = await fetch(
-      `/api/verify/digilocker/status?state=${encodeURIComponent(sessionState)}`,
+      `/api/verify/digilocker/status?state=${encodeURIComponent(state)}`,
     );
     if (!res.ok) return;
     const data = await res.json();
     if (data.profile) setProfile(data.profile);
-  }, [sessionState]);
+  }, [verificationState]);
 
   useEffect(() => {
-    if (verified && sessionState) loadSession();
-  }, [verified, sessionState, loadSession]);
+    if (!sessionState || profile) return;
+    setVerificationState(sessionState);
+
+    let attempts = 0;
+    const poll = async () => {
+      attempts += 1;
+      await loadSession(sessionState);
+    };
+
+    poll();
+    if (!verified) return;
+
+    const interval = window.setInterval(() => {
+      if (attempts >= 10) {
+        window.clearInterval(interval);
+        return;
+      }
+      poll();
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, [verified, sessionState, loadSession, profile]);
 
   async function startDigiLocker() {
     setLoading(true);
     const res = await fetch("/api/verify/digilocker/initiate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomId, propertyId, role }),
+      body: JSON.stringify({
+        roomId,
+        propertyId,
+        role,
+        contactPhone: contactPhone || undefined,
+      }),
     });
     setLoading(false);
 
@@ -79,15 +111,80 @@ export function AddPersonForm({
       return;
     }
 
-    const { authUrl } = await res.json();
-    window.open(authUrl, "_blank", "noopener,noreferrer");
-    toast.info("Complete verification on the tenant's device, then return here.");
+    const { authUrl, state } = await res.json();
+    if (state) setVerificationState(state);
+    toast.info("Redirecting to Sandbox DigiLocker verification.");
+    window.location.assign(authUrl);
+  }
+
+  async function sendAadhaarOtp(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!aadhaarConsent) {
+      toast.error("Consent is required before Aadhaar OTP verification");
+      return;
+    }
+
+    setLoading(true);
+    const res = await fetch("/api/verify/aadhaar/initiate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        roomId,
+        propertyId,
+        role,
+        aadhaarNumber,
+        contactPhone: contactPhone || undefined,
+        consent: aadhaarConsent,
+      }),
+    });
+    setLoading(false);
+
+    if (res.status === 503) {
+      setDigilockerConfigured(false);
+      toast.error("Sandbox KYC is not configured");
+      return;
+    }
+    if (!res.ok) {
+      toast.error("Could not send Aadhaar OTP");
+      return;
+    }
+
+    const data = await res.json();
+    setVerificationState(data.state);
+    setAadhaarNumber("");
+    setAadhaarOtpSent(true);
+    toast.success("OTP sent to the Aadhaar-linked mobile number");
+  }
+
+  async function verifyAadhaarOtp(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!verificationState) {
+      toast.error("Start Aadhaar verification first");
+      return;
+    }
+
+    setLoading(true);
+    const res = await fetch("/api/verify/aadhaar/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state: verificationState, otp: aadhaarOtp }),
+    });
+    setLoading(false);
+
+    if (!res.ok) {
+      toast.error("Aadhaar OTP verification failed");
+      return;
+    }
+
+    setAadhaarOtp("");
+    await loadSession(verificationState);
+    toast.success("Aadhaar verified");
   }
 
   async function confirmTenant(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!sessionState || !profile) {
-      toast.error("Complete DigiLocker verification first");
+    if (!verificationState || !profile) {
+      toast.error("Complete KYC verification first");
       return;
     }
 
@@ -100,9 +197,9 @@ export function AddPersonForm({
       body: JSON.stringify({
         roomId,
         propertyId,
-        sessionState,
+        sessionState: verificationState,
         role,
-        phone: form.get("phone"),
+        phone: form.get("phone") || profile.phone,
         moveInDate: form.get("moveInDate"),
         emergencyContact: form.get("emergencyContact") || undefined,
         name: form.get("name") || profile.name,
@@ -123,7 +220,7 @@ export function AddPersonForm({
 
     const data = await res.json();
     toast.success("Tenant saved");
-    router.push(`/tenants/${data.id}`);
+    router.push(`/dashboard/tenants/${data.id}`);
     router.refresh();
   }
 
@@ -150,20 +247,101 @@ export function AddPersonForm({
       {!profile ? (
         <Card>
           <CardHeader>
-            <CardTitle>Step 1 — DigiLocker verification</CardTitle>
+            <CardTitle>Step 1 - KYC verification</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {!digilockerConfigured && (
               <p className="text-sm text-muted-foreground">
-                Configure DigiLocker credentials in .env.local (see docs).
+                Configure Sandbox KYC credentials in .env.local.
               </p>
             )}
-            <Button onClick={startDigiLocker} disabled={loading}>
-              Verify via DigiLocker
-            </Button>
-            {sessionState && (
-              <Button variant="outline" onClick={loadSession} disabled={loading}>
-                I completed verification — refresh
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="contactPhone">Contact mobile</Label>
+                <Input
+                  id="contactPhone"
+                  inputMode="numeric"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
+                  value={contactPhone}
+                  onChange={(e) =>
+                    setContactPhone(e.target.value.replace(/\D/g, ""))
+                  }
+                />
+              </div>
+              <form onSubmit={sendAadhaarOtp} className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="aadhaarNumber">Aadhaar number</Label>
+                  <Input
+                    id="aadhaarNumber"
+                    inputMode="numeric"
+                    maxLength={12}
+                    pattern="[0-9]{12}"
+                    value={aadhaarNumber}
+                    onChange={(e) =>
+                      setAadhaarNumber(e.target.value.replace(/\D/g, ""))
+                    }
+                    required
+                  />
+                </div>
+                <label className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={aadhaarConsent}
+                    onChange={(e) => setAadhaarConsent(e.target.checked)}
+                  />
+                  I have the tenant's consent to verify Aadhaar for KYC.
+                </label>
+                <Button type="submit" disabled={loading || aadhaarNumber.length !== 12}>
+                  Send OTP
+                </Button>
+              </form>
+
+              <form onSubmit={verifyAadhaarOtp} className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="aadhaarOtp">Aadhaar OTP</Label>
+                  <Input
+                    id="aadhaarOtp"
+                    inputMode="numeric"
+                    maxLength={6}
+                    pattern="[0-9]{6}"
+                    value={aadhaarOtp}
+                    onChange={(e) => setAadhaarOtp(e.target.value.replace(/\D/g, ""))}
+                    disabled={!aadhaarOtpSent}
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={loading || !aadhaarOtpSent || aadhaarOtp.length !== 6}
+                >
+                  Verify OTP
+                </Button>
+              </form>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={startDigiLocker} disabled={loading}>
+                Verify via Sandbox DigiLocker
+              </Button>
+              {verificationState && (
+                <Button
+                  variant="outline"
+                  onClick={() => loadSession(verificationState)}
+                  disabled={loading}
+                >
+                  I completed verification - refresh
+                </Button>
+              )}
+            </div>
+            {sessionState && !verificationState && (
+              <Button
+                variant="outline"
+                onClick={() => loadSession(sessionState)}
+                disabled={loading}
+              >
+                Refresh verification
               </Button>
             )}
           </CardContent>
@@ -171,7 +349,7 @@ export function AddPersonForm({
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Step 2 — Review & confirm</CardTitle>
+            <CardTitle>Step 2 - Review & confirm</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={confirmTenant} className="space-y-4">
@@ -204,7 +382,13 @@ export function AddPersonForm({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" name="phone" required placeholder="98XXXXXXXX" />
+                <Input
+                  id="phone"
+                  name="phone"
+                  defaultValue={profile.phone ?? contactPhone}
+                  required
+                  placeholder="98XXXXXXXX"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="moveInDate">Move-in date</Label>

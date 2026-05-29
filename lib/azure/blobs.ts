@@ -41,6 +41,7 @@ export async function uploadBuffer(
   contentType: string,
 ): Promise<void> {
   const container = getContainerClient(containerName);
+  await container.createIfNotExists();
   const blockBlob = container.getBlockBlobClient(blobKey);
   await blockBlob.uploadData(buffer, {
     blobHTTPHeaders: { blobContentType: contentType },
@@ -108,15 +109,19 @@ export function generateReadSasUrl(
     credential,
   ).toString();
 
-  const blobUrl = `https://${accountName}.blob.core.windows.net/${containerName}/${blobKey}`;
-
-  // Azurite local override
   const cs = process.env.AZURE_STORAGE_CONNECTION_STRING ?? "";
-  if (cs.includes("127.0.0.1") || cs.includes("localhost")) {
-    const base = cs.match(/BlobEndpoint=([^;]+)/)?.[1] ?? "http://127.0.0.1:10000/devstoreaccount1";
+  if (
+    cs === "UseDevelopmentStorage=true" ||
+    cs.includes("127.0.0.1") ||
+    cs.includes("localhost")
+  ) {
+    const base =
+      cs.match(/BlobEndpoint=([^;]+)/)?.[1] ??
+      "http://127.0.0.1:10000/devstoreaccount1";
     return `${base}/${containerName}/${blobKey}?${sas}`;
   }
 
+  const blobUrl = `https://${accountName}.blob.core.windows.net/${containerName}/${blobKey}`;
   return `${blobUrl}?${sas}`;
 }
 

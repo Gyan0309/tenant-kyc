@@ -29,7 +29,7 @@ Copy `.env.example` to `.env.local` and set:
 | `ENCRYPTION_KEY` | 64 hex chars: `openssl rand -hex 32` |
 | `AZURE_TABLE_CONNECTION_STRING` | Azurite defaults in `.env.example` |
 | `AZURE_STORAGE_CONNECTION_STRING` | Azurite defaults in `.env.example` |
-| DigiLocker vars | Optional until partner approval — see [digilocker-integration.md](./digilocker-integration.md) |
+| Sandbox KYC vars | `SANDBOX_API_KEY`, `SANDBOX_API_SECRET`, `SANDBOX_BASE_URL` — see [sandbox-kyc-integration.md](./sandbox-kyc-integration.md) |
 
 ## 3. Bootstrap Azure resources
 
@@ -53,4 +53,4 @@ Open [http://localhost:3000](http://localhost:3000), register an owner account, 
 - Move secrets to Azure Key Vault
 - Use a real Azure Storage account connection string
 - Set `AUTH_URL` to your production domain
-- Register production DigiLocker redirect URI
+- Use production Sandbox KYC credentials and `https://api.sandbox.co.in`

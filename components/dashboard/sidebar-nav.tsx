@@ -22,8 +22,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { href: "/", label: "Properties", icon: Home },
-  { href: "/properties/new", label: "Add Property", icon: Building2 },
+  { href: "/dashboard", label: "Properties", icon: Home },
+  { href: "/dashboard/properties/new", label: "Add Property", icon: Building2 },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -64,7 +64,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <Button
             variant="ghost"
             className="w-full justify-start"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: "/auth/login" })}
           >
             <LogOut className="size-4 mr-2" />
             Sign out

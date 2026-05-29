@@ -35,7 +35,7 @@ export default function NewPropertyPage() {
 
     const data = await res.json();
     toast.success("Property created");
-    router.push(`/properties/${data.id}`);
+    router.push(`/dashboard/properties/${data.id}`);
   }
 
   return (

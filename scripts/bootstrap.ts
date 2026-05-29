@@ -11,7 +11,14 @@ async function main() {
   console.log("Creating Azure Tables...");
   await ensureTablesExist();
   console.log("Creating Blob containers...");
-  await ensureContainersExist();
+  try {
+    await ensureContainersExist();
+  } catch (err) {
+    console.warn(
+      "Blob container bootstrap skipped. If using Azurite, restart it with --skipApiVersionCheck or upgrade Azurite.",
+    );
+    console.warn(err);
+  }
   console.log("Bootstrap complete.");
 }
 

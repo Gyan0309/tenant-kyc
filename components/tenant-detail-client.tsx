@@ -126,7 +126,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
       return;
     }
     toast.success(erasure ? "Erasure request logged" : "Tenant removed");
-    router.push(`/properties/${tenant?.propertyId}/rooms/${tenant?.roomId}`);
+    router.push(`/dashboard/properties/${tenant?.propertyId}/rooms/${tenant?.roomId}`);
   }
 
   if (!tenant) {
@@ -257,7 +257,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
         </CardHeader>
         <CardContent>
           <Link
-            href={`/properties/${tenant.propertyId}/rooms/${tenant.roomId}/add-person?role=ROOMMATE`}
+            href={`/dashboard/properties/${tenant.propertyId}/rooms/${tenant.roomId}/add-person?role=ROOMMATE`}
             className={cn(buttonVariants({ variant: "outline" }))}
           >
             Add roommate via DigiLocker
