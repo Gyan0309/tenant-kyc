@@ -1,17 +1,16 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Shield } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export function ConsentBanner() {
   return (
-    <Alert>
-      <Shield className="size-4" />
-      <AlertTitle>Consent & purpose</AlertTitle>
-      <AlertDescription>
-        Tenant identity data is collected solely for KYC verification and
-        property occupancy records, in compliance with the Digital Personal
-        Data Protection Act. Only masked Aadhaar numbers are stored. The tenant
-        must complete DigiLocker consent on their own device.
-      </AlertDescription>
+    <Alert className="border-indigo-200 bg-indigo-50/30 dark:border-indigo-900/40 dark:bg-indigo-950/10 text-indigo-900 dark:text-indigo-400 p-4 rounded-xl flex items-start gap-3 shadow-none">
+      <ShieldCheck className="size-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5" />
+      <div className="space-y-1 flex-1">
+        <AlertTitle className="font-bold text-xs uppercase tracking-wider text-indigo-800 dark:text-indigo-300">Consent & Purpose Notice</AlertTitle>
+        <AlertDescription className="text-xs text-indigo-700/80 dark:text-indigo-500 leading-relaxed mt-1">
+          Tenant identity data is collected solely for KYC verification and property occupancy records, in compliance with the Digital Personal Data Protection (DPDP) Act. Only masked Aadhaar numbers are stored. The tenant must complete DigiLocker consent on their own device.
+        </AlertDescription>
+      </div>
     </Alert>
   );
 }

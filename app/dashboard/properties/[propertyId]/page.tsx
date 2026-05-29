@@ -2,8 +2,9 @@ import Link from "next/link";
 import { auth } from "@/lib/auth/config";
 import { getProperty } from "@/lib/azure/repos/properties";
 import { listRoomsByProperty } from "@/lib/azure/repos/rooms";
+import { listPersonsByRoom } from "@/lib/azure/repos/persons";
 import { notFound } from "next/navigation";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -20,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RoomStatusBadge } from "@/components/status-badge";
+import { ArrowLeft, Plus, Bed, Landmark, ShieldCheck, DoorOpen } from "lucide-react";
 
 export default async function PropertyPage({
   params,
@@ -36,65 +37,202 @@ export default async function PropertyPage({
 
   const rooms = await listRoomsByProperty(propertyId);
 
+  // Stats calculation
+  let occupiedCount = 0;
+  let partialCount = 0;
+  let vacantCount = 0;
+  let totalCapacity = 0;
+  let activeOccupants = 0;
+  let verifiedOccupants = 0;
+
+  const roomDetails = await Promise.all(
+    rooms.map(async (room) => {
+      const persons = await listPersonsByRoom(room.rowKey);
+      activeOccupants += persons.length;
+      verifiedOccupants += persons.filter((p) => p.isVerified).length;
+      totalCapacity += room.capacity;
+
+      const unverifiedCount = persons.filter((p) => !p.isVerified).length;
+      
+      let verificationStatus: "VERIFIED" | "PENDING" | "ACTION_REQUIRED" | "VACANT" = "VACANT";
+      if (persons.length > 0) {
+        if (unverifiedCount === 0) {
+          verificationStatus = "VERIFIED";
+        } else if (persons.some((p) => p.role === "PRIMARY" && !p.isVerified)) {
+          verificationStatus = "ACTION_REQUIRED";
+        } else {
+          verificationStatus = "PENDING";
+        }
+      }
+
+      if (room.status === "OCCUPIED") occupiedCount++;
+      else if (room.status === "PARTIAL") partialCount++;
+      else vacantCount++;
+
+      return {
+        ...room,
+        currentOccupants: persons.length,
+        verificationStatus,
+      };
+    })
+  );
+
+  const kycRate = activeOccupants > 0 
+    ? Math.round((verifiedOccupants / activeOccupants) * 100) 
+    : 0;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      {/* Breadcrumb / Back Link */}
+      <div>
+        <Link 
+          href="/dashboard" 
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-wider"
+        >
+          <ArrowLeft className="size-3.5" /> Back to Properties
+        </Link>
+      </div>
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">{property.name}</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">{property.name}</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 leading-relaxed">
             {property.address}, {property.city}
           </p>
         </div>
         <Link
           href={`/dashboard/properties/${propertyId}/rooms/new`}
-          className={cn(buttonVariants())}
+          className={cn(buttonVariants(), "bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-md shadow-sm transition-colors flex items-center gap-2 text-xs")}
         >
-          Add room
+          <Plus className="size-4" /> Add Room
         </Link>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Rooms</CardTitle>
-          <CardDescription>Occupancy and tenant verification status</CardDescription>
+      {/* Quick Stats Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="swiss-card shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Rooms</CardTitle>
+            <DoorOpen className="size-4 text-slate-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">{rooms.length}</div>
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">Total configured rooms</p>
+          </CardContent>
+        </Card>
+
+        <Card className="swiss-card shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Occupancy</CardTitle>
+            <Bed className="size-4 text-slate-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">
+              {activeOccupants}/{totalCapacity}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">Active occupants / max capacity</p>
+          </CardContent>
+        </Card>
+
+        <Card className="swiss-card shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Vacancies</CardTitle>
+            <Landmark className="size-4 text-slate-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">{vacantCount}</div>
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">Fully vacant rooms</p>
+          </CardContent>
+        </Card>
+
+        <Card className="swiss-card shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Verified KYC</CardTitle>
+            <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">{kycRate}%</div>
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">{verifiedOccupants} of {activeOccupants} verified</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Rooms Table Card */}
+      <Card className="swiss-card shadow-xs">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-bold text-slate-900 dark:text-white leading-tight tracking-tight">Room Configurations</CardTitle>
+          <CardDescription className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
+            Click view to manage occupants, verify Aadhaar documents, and run KYC.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {rooms.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No rooms yet.</p>
+          {roomDetails.length === 0 ? (
+            <div className="text-center py-8">
+              <DoorOpen className="size-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No rooms set up for this property yet.</p>
+              <Link 
+                href={`/dashboard/properties/${propertyId}/rooms/new`}
+                className="text-xs text-indigo-600 hover:text-indigo-700 underline font-semibold mt-1 inline-block"
+              >
+                Create a room now
+              </Link>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Floor</TableHead>
-                  <TableHead>Capacity</TableHead>
-                  <TableHead>Rent</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rooms.map((room) => (
-                  <TableRow key={room.rowKey}>
-                    <TableCell className="font-medium">{room.roomNumber}</TableCell>
-                    <TableCell>{room.floor}</TableCell>
-                    <TableCell>{room.capacity}</TableCell>
-                    <TableCell>₹{room.monthlyRent}</TableCell>
-                    <TableCell>
-                      <RoomStatusBadge status={room.status} />
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/dashboard/properties/${propertyId}/rooms/${room.rowKey}`}
-                        className={cn(buttonVariants({ variant: "link" }))}
-                      >
-                        View
-                      </Link>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="border-collapse">
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-b border-slate-200 dark:border-slate-800">
+                    <TableHead className="w-[120px] text-slate-500 font-medium text-[10px] uppercase tracking-wider py-3">Room</TableHead>
+                    <TableHead className="text-slate-500 font-medium text-[10px] uppercase tracking-wider py-3">Floor</TableHead>
+                    <TableHead className="text-slate-500 font-medium text-[10px] uppercase tracking-wider py-3">Occupancy</TableHead>
+                    <TableHead className="text-slate-500 font-medium text-[10px] uppercase tracking-wider py-3">Rent (Monthly)</TableHead>
+                    <TableHead className="text-slate-500 font-medium text-[10px] uppercase tracking-wider py-3">Status</TableHead>
+                    <TableHead className="text-right text-slate-500 font-medium text-[10px] uppercase tracking-wider py-3">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {roomDetails.map((room) => (
+                    <TableRow key={room.rowKey} className="group hover:bg-slate-50/80 dark:hover:bg-slate-900/30 border-b border-slate-100 dark:border-slate-800/60 transition-colors">
+                      <TableCell className="font-bold text-slate-900 dark:text-white py-3.5 text-sm">{room.roomNumber}</TableCell>
+                      <TableCell className="text-slate-600 dark:text-slate-400 text-xs py-3.5">
+                        {room.floor === 0 ? "Ground" : `${room.floor} Floor`}
+                      </TableCell>
+                      <TableCell className="text-slate-600 dark:text-slate-400 text-xs py-3.5">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{room.currentOccupants}</span>
+                        <span className="text-slate-400">/{room.capacity}</span>
+                      </TableCell>
+                      <TableCell className="font-bold text-slate-800 dark:text-slate-200 text-xs py-3.5">₹{room.monthlyRent}</TableCell>
+                      <TableCell className="py-3.5">
+                        {room.verificationStatus === "VERIFIED" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50">Verified</span>
+                        )}
+                        {room.verificationStatus === "PENDING" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50">Pending Verification</span>
+                        )}
+                        {room.verificationStatus === "ACTION_REQUIRED" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/50">Action Required</span>
+                        )}
+                        {room.verificationStatus === "VACANT" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-200/60 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">Vacant</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right py-3.5">
+                        <Link
+                          href={`/dashboard/properties/${propertyId}/rooms/${room.rowKey}`}
+                          className={cn(
+                            buttonVariants({ variant: "ghost", size: "sm" }),
+                            "text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 text-xs px-3.5"
+                          )}
+                        >
+                          Manage →
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
