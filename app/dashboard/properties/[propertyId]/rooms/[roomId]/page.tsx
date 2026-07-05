@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { RoomStatusBadge } from "@/components/status-badge";
-import { ArrowLeft, Phone, Plus, Calendar, FileText, User } from "lucide-react";
+import { ArrowLeft, Phone, Calendar, FileText, User } from "lucide-react";
 
 export default async function RoomPage({
   params,
@@ -31,7 +31,7 @@ export default async function RoomPage({
       <div>
         <Link 
           href={`/dashboard/properties/${propertyId}`} 
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-wider"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="size-3.5" /> Back to Property Details
         </Link>
@@ -54,9 +54,9 @@ export default async function RoomPage({
         </div>
         <Link
           href={`/dashboard/properties/${propertyId}/rooms/${roomId}/add-person`}
-          className={cn(buttonVariants(), "bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-md shadow-sm transition-colors flex items-center gap-2 text-xs")}
+          className={cn(buttonVariants(), "bg-brand hover:bg-brand/90 text-brand-foreground py-2.5 px-4 rounded-lg transition-colors flex items-center gap-2 text-xs")}
         >
-          <Plus className="size-4" /> Add Tenant
+          Add Tenant
         </Link>
       </div>
 
@@ -70,7 +70,7 @@ export default async function RoomPage({
             <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No tenants in this room yet.</p>
             <Link 
               href={`/dashboard/properties/${propertyId}/rooms/${roomId}/add-person`}
-              className="text-xs text-indigo-600 hover:text-indigo-700 underline font-semibold mt-1.5 inline-block"
+              className="text-xs text-brand hover:text-brand/80 underline font-medium mt-1.5 inline-block"
             >
               Add first tenant
             </Link>
@@ -151,7 +151,7 @@ export default async function RoomPage({
                         href={`/dashboard/tenants/${p.rowKey}`}
                         className={cn(
                           buttonVariants({ variant: "outline", size: "sm" }),
-                          "text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold text-xs border-indigo-200 hover:border-indigo-300 dark:border-indigo-800 dark:hover:border-indigo-700 px-4 py-2 hover:bg-indigo-50/50"
+                          "text-brand hover:text-brand/80 font-semibold text-xs border border-brand/30 hover:border-brand/50 px-4 py-2 hover:bg-brand-muted/60 dark:hover:bg-brand-muted/30"
                         )}
                       >
                         View Tenant Record

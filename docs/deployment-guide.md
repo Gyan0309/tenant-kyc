@@ -81,7 +81,24 @@ This is expected — go to §4.
 
 ---
 
-## 4. Configure the connection string (where + how)
+## 4. Configure the connection string — the easy way (recommended)
+
+Don't make the client edit files. Use the ready-made configurator in
+[`client-setup/`](../client-setup/README.md):
+
+1. **You:** open `client-setup/Configure-TenantManager.ps1`, paste the client's
+   two Azure connection strings near the top, save.
+2. **You:** send the client both `Configure Tenant Manager.cmd` and
+   `Configure-TenantManager.ps1` (zip them together).
+3. **Client:** double-clicks **`Configure Tenant Manager.cmd`**.
+
+The script writes the config to the correct location, generates the security
+secret, and launches the app — the client never touches JSON or an Azure key.
+Re-running it is safe (keeps the existing login secret).
+
+The manual method below is only if you prefer to hand over a ready file yourself.
+
+## 4b. Configure the connection string manually (where + how)
 
 The app reads its settings from a per-install JSON file in the Windows user
 profile:

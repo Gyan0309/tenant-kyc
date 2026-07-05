@@ -1,7 +1,24 @@
-const { app, BrowserWindow, dialog, shell, Menu } = require("electron");
+const { app, BrowserWindow, dialog, shell, Menu, ipcMain } = require("electron");
 const path = require("node:path");
 const { loadConfig, toEnv, configPath } = require("./config");
 const { startServer, resolveServerEntry } = require("./server");
+
+// Window-controls-overlay colors per theme (must match app tokens / splash).
+const TITLEBAR = {
+  light: { color: "#ffffff", symbolColor: "#334155", height: 34 },
+  dark: { color: "#0f1115", symbolColor: "#e5e7eb", height: 34 },
+};
+
+// The web app reports its resolved theme; recolor the native controls to match.
+ipcMain.on("set-titlebar-theme", (_event, isDark) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    try {
+      mainWindow.setTitleBarOverlay(isDark ? TITLEBAR.dark : TITLEBAR.light);
+    } catch {
+      // setTitleBarOverlay is unavailable on some platforms — ignore.
+    }
+  }
+});
 
 // Ensure only one instance runs (a second launch focuses the existing window).
 if (!app.requestSingleInstanceLock()) {
@@ -28,8 +45,17 @@ function createWindow() {
     minHeight: 640,
     show: false,
     title: "Tenant Manager",
+    // Matches the splash background so there's no white flash before paint.
     backgroundColor: "#0f1115",
     icon: resolveIcon(),
+    // Frameless with a themed Window Controls Overlay: no native title bar or
+    // menu, but the OS min/maximize/close buttons are kept and recolored to
+    // match the app. Starts matching the (dark) splash; the web app updates it
+    // to the active theme via IPC. The draggable strip is rendered by
+    // components/desktop-chrome.tsx.
+    autoHideMenuBar: true,
+    titleBarStyle: "hidden",
+    titleBarOverlay: TITLEBAR.dark,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -140,15 +166,8 @@ app.on("second-instance", () => {
 });
 
 app.whenReady().then(() => {
-  // A minimal application menu; the app is otherwise chrome-free.
-  Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
-      { role: "fileMenu" },
-      { role: "editMenu" },
-      { role: "viewMenu" },
-      { role: "windowMenu" },
-    ]),
-  );
+  // No application menu — the app has no File/Edit/View bar.
+  Menu.setApplicationMenu(null);
   boot();
 
   app.on("activate", () => {

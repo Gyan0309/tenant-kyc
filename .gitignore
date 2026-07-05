@@ -22,6 +22,7 @@
 
 # electron desktop build output
 /dist-desktop
+/dist-out
 desktop-test*.log
 
 # misc
@@ -48,3 +49,5 @@ next-env.d.ts
 prompt.txt
 image.png
 .agent/
+*.png
+*.jpeg

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Home, LogOut } from "lucide-react";
+import { Home, LogOut } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { SagaLogo } from "@/components/brand";
 import {
@@ -21,6 +21,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -117,8 +118,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               Signed in as <span className="font-medium text-foreground">{user?.name || "Manager"}</span>
             </span>
           </div>
-          <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            v1.0.0
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              v1.0.0
+            </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 p-6 md:p-8">{children}</main>

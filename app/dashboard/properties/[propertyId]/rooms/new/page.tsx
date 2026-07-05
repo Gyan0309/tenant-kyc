@@ -44,51 +44,47 @@ export default function NewRoomPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-6">
-      {/* Back Link */}
-      <div>
-        <Link
-          href={`/dashboard/properties/${params.propertyId}`}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" /> Back to property
-        </Link>
-      </div>
+    <div className="space-y-5">
+      <Link
+        href={`/dashboard/properties/${params.propertyId}`}
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-3.5" /> Back to property
+      </Link>
 
-      <div className="space-y-1 text-center">
-        <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-brand-muted text-brand">
-          <DoorOpen className="size-5" />
-        </div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">Add room</h1>
-        <p className="text-sm text-muted-foreground">
-          Set up a new rental unit and configure its parameters.
-        </p>
-      </div>
-
-      <Card className="swiss-card p-6">
+      <Card className="swiss-card mx-auto w-full max-w-md p-6">
         <CardContent className="p-0">
-          <form onSubmit={onSubmit} className="space-y-4">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-lg bg-brand-muted text-brand">
+              <DoorOpen className="size-4.5" />
+            </div>
+            <div>
+              <h1 className="font-heading text-base font-semibold text-foreground">Add room</h1>
+              <p className="text-xs text-muted-foreground">Configure a new rental unit.</p>
+            </div>
+          </div>
+          <form onSubmit={onSubmit} className="space-y-3.5">
             <div className="space-y-1.5">
               <Label htmlFor="roomNumber" className="text-xs font-medium text-foreground">Room number</Label>
-              <Input id="roomNumber" name="roomNumber" required placeholder="A-101 or Room 5" className="swiss-focus h-11 text-sm" />
+              <Input id="roomNumber" name="roomNumber" required placeholder="A-101 or Room 5" className="swiss-focus h-10 text-sm" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="capacity" className="text-xs font-medium text-foreground">Capacity</Label>
-                <Input id="capacity" name="capacity" type="number" min={1} defaultValue={1} required className="swiss-focus h-11 text-sm" />
+                <Input id="capacity" name="capacity" type="number" min={1} defaultValue={1} required className="swiss-focus h-10 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="floor" className="text-xs font-medium text-foreground">Floor</Label>
-                <Input id="floor" name="floor" type="number" defaultValue={0} className="swiss-focus h-11 text-sm" />
+                <Input id="floor" name="floor" type="number" defaultValue={0} className="swiss-focus h-10 text-sm" />
               </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="monthlyRent" className="text-xs font-medium text-foreground">Monthly rent (₹)</Label>
-              <Input id="monthlyRent" name="monthlyRent" type="number" min={0} placeholder="12000" required className="swiss-focus h-11 text-sm" />
+              <Input id="monthlyRent" name="monthlyRent" type="number" min={0} placeholder="12000" required className="swiss-focus h-10 text-sm" />
             </div>
             <Button
               type="submit"
-              className="mt-2 h-11 w-full rounded-lg bg-brand text-brand-foreground hover:bg-brand/90"
+              className="mt-1 h-10 w-full rounded-lg bg-brand text-brand-foreground hover:bg-brand/90"
               disabled={loading}
             >
               {loading ? "Saving…" : "Create room"}

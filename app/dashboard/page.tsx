@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Building2, Users, MapPin, Plus } from "lucide-react";
+import { Building2, Users, MapPin } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
           href="/dashboard/properties/new"
           className={cn(buttonVariants(), "h-10 gap-2 rounded-lg bg-brand px-4 text-sm text-brand-foreground hover:bg-brand/90")}
         >
-          <Plus className="size-4" /> Add property
+         Add property
         </Link>
       </div>
 
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
               href="/dashboard/properties/new"
               className={cn(buttonVariants(), "h-9 gap-2 rounded-lg bg-brand px-4 text-sm text-brand-foreground hover:bg-brand/90")}
             >
-              <Plus className="size-4" /> Add property
+              Add property
             </Link>
           </Card>
         ) : (

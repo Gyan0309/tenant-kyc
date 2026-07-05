@@ -143,7 +143,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
   if (!tenant) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <div className="size-10 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" />
+        <div className="size-10 rounded-full border-4 border-brand border-t-transparent animate-spin" />
         <p className="text-sm text-slate-500 font-medium">Loading tenant record...</p>
       </div>
     );
@@ -164,9 +164,9 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
       <div>
         <Link 
           href={`/dashboard/properties/${tenant.propertyId}/rooms/${tenant.roomId}`} 
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-wider"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="size-3.5" /> Back to Room Details
+          <ArrowLeft className="size-3.5" /> Back to room
         </Link>
       </div>
 
@@ -265,7 +265,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
                     className="flex items-center justify-between border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-950/20 hover:border-slate-300 transition-colors shadow-xs"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="bg-indigo-50 dark:bg-indigo-950/40 p-2.5 rounded-lg text-indigo-600 dark:text-indigo-400">
+                      <div className="bg-brand-muted p-2.5 rounded-lg text-brand">
                         <FileText className="size-4.5" />
                       </div>
                       <div>
@@ -323,12 +323,12 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
                       type="file" 
                       accept="image/*,.pdf" 
                       required 
-                      className="border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500 cursor-pointer text-xs"
+                      className="swiss-focus cursor-pointer text-xs"
                     />
                   </div>
                 </div>
 
-                <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-800 rounded-lg p-6 bg-slate-50/50 dark:bg-slate-900/10 flex flex-col items-center justify-center text-center transition-colors">
+                <div className="border-2 border-dashed border-border hover:border-brand/50 rounded-lg p-6 bg-muted/30 flex flex-col items-center justify-center text-center transition-colors">
                   <UploadCloud className="size-8 text-slate-400 mb-2" />
                   <p className="text-xs text-slate-500 font-semibold mb-1">Click the button below to upload the selected file</p>
                   <p className="text-[10px] text-slate-400">PDF or Image up to 4MB</p>
@@ -337,7 +337,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
                 <Button 
                   type="submit" 
                   disabled={loading}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-sm transition-colors flex items-center gap-2"
+                  className="bg-brand hover:bg-brand/90 text-brand-foreground text-xs py-2 px-4 transition-colors flex items-center gap-2"
                 >
                   {loading ? "Uploading…" : "Commit Document"}
                 </Button>
@@ -375,7 +375,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
                 </div>
                 {/* Step 3 */}
                 <div className="relative">
-                  <div className="absolute -left-[30px] top-1 bg-indigo-600 border-4 border-white dark:border-slate-950 size-4.5 rounded-full" />
+                  <div className="absolute -left-[30px] top-1 bg-brand border-4 border-card size-4.5 rounded-full" />
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Owner Sign-off & Registry Log</h4>
                   <p className="text-[10px] text-slate-500 mt-1 leading-normal">
                     Tenant record committed to Azure Table Storage on {tenant.verifiedAt ? new Date(tenant.verifiedAt).toLocaleString() : "manual entry"}.

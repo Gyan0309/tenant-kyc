@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Plus, Bed, Landmark, Users, DoorOpen } from "lucide-react";
+import { ArrowLeft, Bed, Landmark, Users, DoorOpen } from "lucide-react";
 
 export default async function PropertyPage({
   params,
@@ -47,8 +47,10 @@ export default async function PropertyPage({
     })
   );
 
-  const vacantCount = roomDetails.filter((room) => room.status === "VACANT").length;
-  const totalCapacity = roomDetails.reduce((sum, room) => sum + room.capacity, 0);
+  // Occupancy at the property level = rooms that have at least one tenant,
+  // out of total rooms (not people / bed-capacity — that lives per-room).
+  const occupiedRooms = roomDetails.filter((room) => room.currentOccupants > 0).length;
+  const vacantCount = rooms.length - occupiedRooms;
   const activeOccupants = roomDetails.reduce(
     (sum, room) => sum + room.currentOccupants,
     0,
@@ -60,9 +62,9 @@ export default async function PropertyPage({
       <div>
         <Link 
           href="/dashboard" 
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-wider"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="size-3.5" /> Back to Properties
+          <ArrowLeft className="size-3.5" /> Back to properties
         </Link>
       </div>
 
@@ -76,9 +78,9 @@ export default async function PropertyPage({
         </div>
         <Link
           href={`/dashboard/properties/${propertyId}/rooms/new`}
-          className={cn(buttonVariants(), "bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-md shadow-sm transition-colors flex items-center gap-2 text-xs")}
+          className={cn(buttonVariants(), "bg-brand hover:bg-brand/90 text-brand-foreground py-2.5 px-4 rounded-lg transition-colors flex items-center gap-2 text-xs")}
         >
-          <Plus className="size-4" /> Add Room
+         Add Room
         </Link>
       </div>
 
@@ -102,9 +104,9 @@ export default async function PropertyPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900 dark:text-white">
-              {activeOccupants}/{totalCapacity}
+              {occupiedRooms}/{rooms.length}
             </div>
-            <p className="text-[10px] text-slate-400 mt-1 font-medium">Active occupants / max capacity</p>
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">Rooms occupied</p>
           </CardContent>
         </Card>
 
@@ -122,7 +124,7 @@ export default async function PropertyPage({
         <Card className="swiss-card shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Tenant Records</CardTitle>
-            <Users className="size-4 text-indigo-600 dark:text-indigo-400" />
+            <Users className="size-4 text-brand" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900 dark:text-white">{activeOccupants}</div>
@@ -146,7 +148,7 @@ export default async function PropertyPage({
               <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No rooms set up for this property yet.</p>
               <Link 
                 href={`/dashboard/properties/${propertyId}/rooms/new`}
-                className="text-xs text-indigo-600 hover:text-indigo-700 underline font-semibold mt-1 inline-block"
+                className="text-xs text-brand hover:text-brand/80 underline font-medium mt-1 inline-block"
               >
                 Create a room now
               </Link>
@@ -192,10 +194,10 @@ export default async function PropertyPage({
                           href={`/dashboard/properties/${propertyId}/rooms/${room.rowKey}`}
                           className={cn(
                             buttonVariants({ variant: "ghost", size: "sm" }),
-                            "text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 text-xs px-3.5"
+                            "text-brand hover:text-brand/80 font-semibold hover:bg-brand-muted/60 dark:hover:bg-brand-muted/30 text-xs px-3.5"
                           )}
                         >
-                          Manage →
+                          Manage
                         </Link>
                       </TableCell>
                     </TableRow>

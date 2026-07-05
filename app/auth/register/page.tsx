@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, Mail, Lock, ArrowRight } from "lucide-react";
+import { User, Mail, Lock } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -137,7 +137,6 @@ export default function RegisterPage() {
             disabled={loading}
           >
             <span>{loading ? "Creating account…" : "Create account"}</span>
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
 
           <div className="text-center text-xs text-muted-foreground">

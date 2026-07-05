@@ -127,6 +127,21 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Desktop shell: reserve space for the custom title-bar strip (34px). Only the
+   dashboard has top-anchored chrome + a fixed sidebar that need offsetting;
+   centered pages (auth, 404, error) sit under the transparent strip fine. */
+html.desktop-chrome {
+  --titlebar-h: 34px;
+}
+.desktop-chrome [data-slot="sidebar-wrapper"] {
+  margin-top: var(--titlebar-h);
+  min-height: calc(100svh - var(--titlebar-h));
+}
+.desktop-chrome [data-slot="sidebar-container"] {
+  top: var(--titlebar-h);
+  height: calc(100svh - var(--titlebar-h));
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

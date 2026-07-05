@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "electron/**",
     "scripts/postbuild-standalone.mjs",
     "dist-desktop/**",
+    "dist-out/**",
   ]),
 ]);
 
