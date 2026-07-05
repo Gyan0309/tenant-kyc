@@ -1,4 +1,10 @@
-import { createPerson, softDeletePerson } from "@/lib/azure/repos/persons";
+import {
+  createPerson,
+  softDeletePerson,
+  listPersonsByRoom,
+  setPersonPhoto,
+} from "@/lib/azure/repos/persons";
+import { optimizeAvatar } from "@/lib/images/optimize";
 import { createDocument, softDeleteDocument } from "@/lib/azure/repos/documents";
 import { findRoomById } from "@/lib/azure/repos/rooms";
 import {
@@ -16,16 +22,19 @@ export interface CreateManualTenantInput {
   roomId: string;
   propertyId: string;
   phone: string;
-  moveInDate: string;
+  moveInDate?: string;
   emergencyContact?: string;
   role: PersonRole;
+  relation?: string;
   name: string;
   dob?: string;
   gender?: string;
-  address: string;
+  address?: string;
   aadhaarLast4?: string;
-  aadhaarFile: File;
+  // Aadhaar is required for the primary tenant, optional for roommates/family.
+  aadhaarFile?: File | null;
   aadhaarPassword?: string;
+  photoFile?: File | null;
 }
 
 export async function createTenantFromManualUpload(input: CreateManualTenantInput) {
@@ -34,30 +43,52 @@ export async function createTenantFromManualUpload(input: CreateManualTenantInpu
     throw new Error("Room not found");
   }
 
+  // Roommates & family inherit address and move-in date from the primary tenant.
+  let address = input.address ?? "";
+  let moveInDate = input.moveInDate ?? "";
+  if (input.role !== "PRIMARY" && (!address || !moveInDate)) {
+    const primary = (await listPersonsByRoom(input.roomId)).find(
+      (p) => p.role === "PRIMARY",
+    );
+    if (primary) {
+      if (!address) address = primary.address;
+      if (!moveInDate) moveInDate = primary.moveInDate;
+    }
+  }
+  if (!moveInDate) moveInDate = new Date().toISOString().slice(0, 10);
+
   const tenantId = newTenantId();
   const container = getDocsContainer();
-  const blobKey = `docs/${tenantId}/aadhaar.${fileExtension(input.aadhaarFile.name)}`;
-  // Decrypt the Aadhaar PDF if it is password protected, so the stored copy
-  // opens without a password. Throws PdfPasswordError on a missing/wrong
-  // password (mapped to a 400 by the API route). No-op for images.
-  const buffer = await removePdfPasswordIfPresent(
-    Buffer.from(await input.aadhaarFile.arrayBuffer()),
-    input.aadhaarFile.name,
-    input.aadhaarFile.type,
-    input.aadhaarPassword,
-  );
+  const hasAadhaar = !!input.aadhaarFile && input.aadhaarFile.size > 0;
+
+  let blobKey = "";
+  let buffer: Buffer | null = null;
+  if (hasAadhaar && input.aadhaarFile) {
+    blobKey = `docs/${tenantId}/aadhaar.${fileExtension(input.aadhaarFile.name)}`;
+    // Decrypt the Aadhaar PDF if password protected so the stored copy opens
+    // without a password. Throws PdfPasswordError on a missing/wrong password.
+    buffer = await removePdfPasswordIfPresent(
+      Buffer.from(await input.aadhaarFile.arrayBuffer()),
+      input.aadhaarFile.name,
+      input.aadhaarFile.type,
+      input.aadhaarPassword,
+    );
+  }
+
   let uploaded = false;
   let personCreated = false;
   let documentId = "";
 
   try {
-    await uploadBuffer(
-      container,
-      blobKey,
-      buffer,
-      input.aadhaarFile.type || "application/octet-stream",
-    );
-    uploaded = true;
+    if (hasAadhaar && input.aadhaarFile && buffer) {
+      await uploadBuffer(
+        container,
+        blobKey,
+        buffer,
+        input.aadhaarFile.type || "application/octet-stream",
+      );
+      uploaded = true;
+    }
 
     const person = await createPerson({
       rowKey: tenantId,
@@ -65,30 +96,50 @@ export async function createTenantFromManualUpload(input: CreateManualTenantInpu
       propertyId: input.propertyId,
       ownerId: input.ownerId,
       role: input.role,
+      relation: input.relation ?? "",
       name: input.name,
       dob: input.dob ?? "",
       gender: input.gender ?? "",
       maskedAadhaar: input.aadhaarLast4 ? `XXXX XXXX ${input.aadhaarLast4}` : "",
       phone: input.phone,
-      address: input.address,
+      address,
       photoBlobKey: "",
       isVerified: false,
       verifiedAt: "",
-      moveInDate: input.moveInDate,
+      moveInDate,
       emergencyContact: input.emergencyContact ?? "",
     });
     personCreated = true;
 
-    const document = await createDocument({
-      personId: person.rowKey,
-      roomId: input.roomId,
-      ownerId: input.ownerId,
-      docType: "AADHAAR",
-      blobKey,
-      isVerified: false,
-      source: "MANUAL_UPLOAD",
-    });
-    documentId = document.rowKey;
+    let document = null;
+    if (uploaded) {
+      document = await createDocument({
+        personId: person.rowKey,
+        roomId: input.roomId,
+        ownerId: input.ownerId,
+        docType: "AADHAAR",
+        blobKey,
+        isVerified: false,
+        source: "MANUAL_UPLOAD",
+      });
+      documentId = document.rowKey;
+    }
+
+    // Optional tenant photo — optimized before storing. Best-effort: a photo
+    // failure should not roll back an otherwise-valid tenant.
+    if (input.photoFile && input.photoFile.size > 0) {
+      try {
+        const optimized = await optimizeAvatar(
+          Buffer.from(await input.photoFile.arrayBuffer()),
+        );
+        const photoKey = `persons/${tenantId}/photo.jpg`;
+        await uploadBuffer(container, photoKey, optimized, "image/jpeg");
+        await setPersonPhoto(input.roomId, tenantId, photoKey);
+        person.photoBlobKey = photoKey;
+      } catch (photoErr) {
+        console.error("Tenant photo skipped:", photoErr);
+      }
+    }
 
     await recalculateRoomStatus(input.propertyId, input.roomId, room.capacity);
 

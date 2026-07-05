@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -24,16 +23,14 @@ import {
 } from "@/components/ui/select";
 import { DOC_TYPES, type DocType } from "@/lib/types/enums";
 import Link from "next/link";
-import { 
-  ArrowLeft, 
-  Phone, 
-  Calendar, 
-  FileText, 
-  UploadCloud, 
-  Users, 
-  Lock,
+import {
+  ArrowLeft,
+  Phone,
+  Calendar,
+  FileText,
+  UploadCloud,
   Eye,
-  CheckCircle2
+  Trash2,
 } from "lucide-react";
 
 interface TenantData {
@@ -117,26 +114,17 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
     if (t.ok) setTenant(await t.json());
   }
 
-  async function deleteTenant(erasure = false) {
-    if (
-      !confirm(
-        erasure
-          ? "Request data erasure? This logs a DPDP erasure request."
-          : "Remove this tenant from the room?",
-      )
-    ) {
+  async function deleteTenant() {
+    if (!confirm("Delete this tenant? This removes them from the room.")) {
       return;
     }
 
-    const res = await fetch(
-      `/api/tenants/${tenantId}${erasure ? "?erasure=1" : ""}`,
-      { method: "DELETE" },
-    );
+    const res = await fetch(`/api/tenants/${tenantId}`, { method: "DELETE" });
     if (!res.ok) {
       toast.error("Delete failed");
       return;
     }
-    toast.success(erasure ? "Erasure request logged" : "Tenant removed");
+    toast.success("Tenant deleted");
     router.push(`/dashboard/properties/${tenant?.propertyId}/rooms/${tenant?.roomId}`);
   }
 
@@ -160,14 +148,21 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
 
   return (
     <div className="space-y-8">
-      {/* Back Link */}
-      <div>
-        <Link 
-          href={`/dashboard/properties/${tenant.propertyId}/rooms/${tenant.roomId}`} 
+      {/* Back Link + Delete */}
+      <div className="flex items-center justify-between">
+        <Link
+          href={`/dashboard/properties/${tenant.propertyId}/rooms/${tenant.roomId}`}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="size-3.5" /> Back to room
         </Link>
+        <Button
+          variant="ghost"
+          onClick={() => deleteTenant()}
+          className="h-8 gap-1.5 px-3 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Trash2 className="size-3.5" /> Delete tenant
+        </Button>
       </div>
 
       {/* Main Grid Section: Asymmetrical Grid (col-span-4 vs col-span-8) */}
@@ -345,92 +340,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
             </CardContent>
           </Card>
 
-          {/* Audit Log Vertical Timeline */}
-          <Card className="swiss-card shadow-xs">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base font-bold text-slate-900 dark:text-white leading-none">Document Audit Log</CardTitle>
-              <CardDescription className="text-xs text-slate-500 mt-1">Consent and record history under DPDP guidelines.</CardDescription>
-            </CardHeader>
-            <CardContent className="px-6 pb-6">
-              <div className="relative pl-6 border-l border-slate-200 dark:border-slate-800 space-y-6">
-                {/* Step 1 */}
-                <div className="relative">
-                  <div className="absolute -left-[30px] top-1 bg-emerald-600 border-4 border-white dark:border-slate-950 size-4.5 rounded-full" />
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    Tenant Consent Recorded <CheckCircle2 className="size-3 text-emerald-600" />
-                  </h4>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                    Tenant provided the Aadhaar document for occupancy records.
-                  </p>
-                </div>
-                {/* Step 2 */}
-                <div className="relative">
-                  <div className="absolute -left-[30px] top-1 bg-emerald-600 border-4 border-white dark:border-slate-950 size-4.5 rounded-full" />
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    Private Blob Storage <CheckCircle2 className="size-3 text-emerald-600" />
-                  </h4>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                    Aadhaar scan stored in the private tenant document container.
-                  </p>
-                </div>
-                {/* Step 3 */}
-                <div className="relative">
-                  <div className="absolute -left-[30px] top-1 bg-brand border-4 border-card size-4.5 rounded-full" />
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Owner Sign-off & Registry Log</h4>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                    Tenant record committed to Azure Table Storage on {tenant.verifiedAt ? new Date(tenant.verifiedAt).toLocaleString() : "manual entry"}.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Roommates Section */}
-          <Card className="swiss-card shadow-xs">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold text-slate-900 dark:text-white leading-none">Roommates & Family Links</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Link
-                href={`/dashboard/properties/${tenant.propertyId}/rooms/${tenant.roomId}/add-person?role=ROOMMATE`}
-                className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "text-xs font-bold border-slate-200 dark:border-slate-800 hover:bg-slate-100 flex items-center gap-2"
-                )}
-              >
-                <Users className="size-4 text-slate-400" /> Add Roommate
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* DPDP Compliance Block (Danger Zone) */}
-          <div className="border border-rose-200 bg-rose-50/50 dark:border-rose-900/60 dark:bg-rose-950/10 p-6 rounded-lg space-y-4">
-            <div className="flex items-center gap-2 text-rose-900 dark:text-rose-400">
-              <Lock className="size-4.5 stroke-[2.5]" />
-              <h3 className="font-extrabold text-sm tracking-tight uppercase">Right to Erasure (DPDP Act 2023)</h3>
-            </div>
-            
-            <p className="text-xs text-rose-800/80 dark:text-rose-500/80 leading-relaxed">
-              Under section 12 of the DPDP Act 2023, data principals have the right to erase digital personal details upon cessation of purpose. Processing an erasure request records the request and prepares uploaded identity documents for removal from active Azure storage.
-            </p>
-            
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button 
-                variant="destructive" 
-                onClick={() => deleteTenant(false)}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs py-2 shadow-xs transition-colors"
-              >
-                Remove Occupant
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => deleteTenant(true)}
-                className="text-rose-800 border-rose-200 bg-white hover:bg-rose-50 dark:text-rose-400 dark:border-rose-900/60 dark:bg-transparent dark:hover:bg-rose-950/20 font-semibold text-xs py-2 transition-colors"
-              >
-                Process Data Erasure
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

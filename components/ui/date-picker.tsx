@@ -71,6 +71,10 @@ export function DatePicker({
   const startWeekday = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+  const maxYearAllowed = maxDate ? maxDate.getFullYear() : Infinity;
+  const [yearView, setYearView] = React.useState(false);
+  const [yearBase, setYearBase] = React.useState(year - 6);
+
   const cells: (number | null)[] = [];
   for (let i = 0; i < startWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -101,87 +105,154 @@ export function DatePicker({
         <Popover.Portal>
           <Popover.Positioner side="bottom" align="start" sideOffset={6} className="z-50">
             <Popover.Popup className="w-64 origin-(--transform-origin) rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95">
-              {/* Month header */}
-              <div className="mb-2 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setView(new Date(year, month - 1, 1))}
-                  className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft className="size-4" />
-                </button>
-                <span className="text-sm font-medium text-foreground">
-                  {MONTHS[month]} {year}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setView(new Date(year, month + 1, 1))}
-                  className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  aria-label="Next month"
-                >
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
-
-              {/* Weekday labels */}
-              <div className="grid grid-cols-7 gap-0.5">
-                {WEEKDAYS.map((w) => (
-                  <div key={w} className="flex h-7 items-center justify-center text-[10px] font-medium text-muted-foreground">
-                    {w}
-                  </div>
-                ))}
-                {cells.map((day, i) => {
-                  if (day === null) return <div key={`e${i}`} className="size-8" />;
-                  const cellDate = new Date(year, month, day);
-                  const isSelected = selected && sameDay(cellDate, selected);
-                  const isToday = sameDay(cellDate, today);
-                  const disabled = maxDate ? cellDate > maxDate : false;
-                  return (
+              {yearView ? (
+                <>
+                  {/* Year picker: 12-year window, page by decade */}
+                  <div className="mb-2 flex items-center gap-1">
                     <button
-                      key={day}
                       type="button"
-                      disabled={disabled}
-                      onClick={() => pick(day)}
-                      className={cn(
-                        "flex size-8 items-center justify-center rounded-md text-xs transition-colors",
-                        disabled
-                          ? "cursor-not-allowed text-muted-foreground/30"
-                          : isSelected
-                            ? "bg-brand font-medium text-brand-foreground"
-                            : "text-foreground hover:bg-accent",
-                        !disabled && !isSelected && isToday && "font-semibold text-brand ring-1 ring-inset ring-brand/40",
-                      )}
+                      onClick={() => setYearBase(yearBase - 12)}
+                      className="inline-flex size-7 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      aria-label="Previous years"
                     >
-                      {day}
+                      <ChevronLeft className="size-4" />
                     </button>
-                  );
-                })}
-              </div>
+                    <span className="flex-1 text-center text-sm font-medium text-foreground">
+                      {yearBase} – {yearBase + 11}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setYearBase(yearBase + 12)}
+                      className="inline-flex size-7 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      aria-label="Next years"
+                    >
+                      <ChevronRight className="size-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 py-1">
+                    {Array.from({ length: 12 }, (_, i) => yearBase + i).map((y) => {
+                      const yDisabled = y > maxYearAllowed;
+                      const isCurrent = y === year;
+                      return (
+                        <button
+                          key={y}
+                          type="button"
+                          disabled={yDisabled}
+                          onClick={() => { setView(new Date(y, month, 1)); setYearView(false); }}
+                          className={cn(
+                            "rounded-md py-2 text-xs transition-colors",
+                            yDisabled
+                              ? "cursor-not-allowed text-muted-foreground/30"
+                              : isCurrent
+                                ? "bg-brand font-medium text-brand-foreground"
+                                : "text-foreground hover:bg-accent",
+                          )}
+                        >
+                          {y}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Month header: prev/next month + month dropdown + year button */}
+                  <div className="mb-2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setView(new Date(year, month - 1, 1))}
+                      className="inline-flex size-7 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      aria-label="Previous month"
+                    >
+                      <ChevronLeft className="size-4" />
+                    </button>
+                    <div className="flex flex-1 items-center justify-center gap-1">
+                      <select
+                        value={month}
+                        onChange={(e) => setView(new Date(year, Number(e.target.value), 1))}
+                        aria-label="Month"
+                        className="cursor-pointer rounded-md bg-transparent px-1.5 py-1 text-sm font-medium text-foreground outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        {MONTHS.map((m, i) => (
+                          <option key={m} value={i} className="bg-popover text-foreground">{m}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => { setYearBase(year - 6); setYearView(true); }}
+                        className="rounded-md px-1.5 py-1 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+                      >
+                        {year}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setView(new Date(year, month + 1, 1))}
+                      className="inline-flex size-7 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      aria-label="Next month"
+                    >
+                      <ChevronRight className="size-4" />
+                    </button>
+                  </div>
 
-              {/* Footer actions */}
-              <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
-                {todayDisabled ? (
-                  <span />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => { setValue(toISO(today)); setView(today); setOpen(false); }}
-                    className="rounded-md px-2 py-1 text-xs font-medium text-brand hover:bg-accent"
-                  >
-                    Today
-                  </button>
-                )}
-                {selected && !required && (
-                  <button
-                    type="button"
-                    onClick={() => { setValue(""); setOpen(false); }}
-                    className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
+                  <div className="grid grid-cols-7 gap-0.5">
+                    {WEEKDAYS.map((w) => (
+                      <div key={w} className="flex h-7 items-center justify-center text-[10px] font-medium text-muted-foreground">
+                        {w}
+                      </div>
+                    ))}
+                    {cells.map((day, i) => {
+                      if (day === null) return <div key={`e${i}`} className="size-8" />;
+                      const cellDate = new Date(year, month, day);
+                      const isSelected = selected && sameDay(cellDate, selected);
+                      const isToday = sameDay(cellDate, today);
+                      const disabled = maxDate ? cellDate > maxDate : false;
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => pick(day)}
+                          className={cn(
+                            "flex size-8 items-center justify-center rounded-md text-xs transition-colors",
+                            disabled
+                              ? "cursor-not-allowed text-muted-foreground/30"
+                              : isSelected
+                                ? "bg-brand font-medium text-brand-foreground"
+                                : "text-foreground hover:bg-accent",
+                            !disabled && !isSelected && isToday && "font-semibold text-brand ring-1 ring-inset ring-brand/40",
+                          )}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
+                    {todayDisabled ? (
+                      <span />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => { setValue(toISO(today)); setView(today); setOpen(false); }}
+                        className="rounded-md px-2 py-1 text-xs font-medium text-brand hover:bg-accent"
+                      >
+                        Today
+                      </button>
+                    )}
+                    {selected && !required && (
+                      <button
+                        type="button"
+                        onClick={() => { setValue(""); setOpen(false); }}
+                        className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </Popover.Popup>
           </Popover.Positioner>
         </Popover.Portal>

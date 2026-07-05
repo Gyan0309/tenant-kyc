@@ -9,6 +9,7 @@ export interface PersonEntity {
   propertyId: string;
   ownerId: string;
   role: PersonRole;
+  relation: string;
   name: string;
   dob: string;
   gender: string;
@@ -37,6 +38,7 @@ export async function createPerson(
     propertyId: data.propertyId,
     ownerId: data.ownerId,
     role: data.role,
+    relation: data.relation ?? "",
     name: data.name,
     dob: data.dob,
     gender: data.gender,
@@ -133,6 +135,18 @@ export async function updatePerson(
   const merged = { ...existing, ...updates };
   await client.updateEntity(merged, "Merge");
   return merged as PersonEntity;
+}
+
+export async function setPersonPhoto(
+  roomId: string,
+  tenantId: string,
+  photoBlobKey: string,
+): Promise<void> {
+  const client = getTableClient("Persons");
+  await client.updateEntity(
+    { partitionKey: roomId, rowKey: tenantId, photoBlobKey },
+    "Merge",
+  );
 }
 
 export async function softDeletePerson(

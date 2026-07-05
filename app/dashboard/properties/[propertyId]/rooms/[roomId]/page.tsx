@@ -56,7 +56,7 @@ export default async function RoomPage({
           href={`/dashboard/properties/${propertyId}/rooms/${roomId}/add-person`}
           className={cn(buttonVariants(), "bg-brand hover:bg-brand/90 text-brand-foreground py-2.5 px-4 rounded-lg transition-colors flex items-center gap-2 text-xs")}
         >
-          Add Tenant
+          {persons.length === 0 ? "Add tenant" : "Add occupant"}
         </Link>
       </div>
 

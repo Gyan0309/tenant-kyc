@@ -12,29 +12,52 @@ export async function POST(req: NextRequest) {
     if (error) return error;
 
     const formData = await req.formData();
-    const aadhaarFile = formData.get("aadhaarFile");
-    if (!(aadhaarFile instanceof File) || aadhaarFile.size === 0) {
-      return jsonError("Aadhaar document is required", 400);
+    const role = stringValue(formData, "role") || "PRIMARY";
+
+    // Aadhaar is required only for the primary tenant; optional for roommates
+    // and family members.
+    const rawAadhaar = formData.get("aadhaarFile");
+    const aadhaarFile =
+      rawAadhaar instanceof File && rawAadhaar.size > 0 ? rawAadhaar : null;
+
+    if (role === "PRIMARY" && !aadhaarFile) {
+      return jsonError("Aadhaar document is required for the primary tenant", 400);
     }
-    if (aadhaarFile.size > 4 * 1024 * 1024) {
-      return jsonError("Aadhaar document must be 4MB or smaller", 400);
+    if (aadhaarFile) {
+      if (aadhaarFile.size > 4 * 1024 * 1024) {
+        return jsonError("Aadhaar document must be 4MB or smaller", 400);
+      }
+      if (!isAllowedDocumentType(aadhaarFile)) {
+        return jsonError("Aadhaar document must be a PDF or image", 400);
+      }
     }
-    if (!isAllowedDocumentType(aadhaarFile)) {
-      return jsonError("Aadhaar document must be a PDF or image", 400);
+
+    // Optional tenant photo (optimized server-side before storage).
+    const rawPhoto = formData.get("photoFile");
+    const photoFile =
+      rawPhoto instanceof File && rawPhoto.size > 0 ? rawPhoto : null;
+    if (photoFile) {
+      if (photoFile.size > 8 * 1024 * 1024) {
+        return jsonError("Photo must be 8MB or smaller", 400);
+      }
+      if (!photoFile.type.toLowerCase().startsWith("image/")) {
+        return jsonError("Photo must be an image", 400);
+      }
     }
 
     const data = createManualTenantSchema.parse({
       roomId: stringValue(formData, "roomId"),
       propertyId: stringValue(formData, "propertyId"),
-      role: stringValue(formData, "role") || "PRIMARY",
+      role,
+      relation: optionalStringValue(formData, "relation"),
       name: stringValue(formData, "name"),
       dob: optionalStringValue(formData, "dob"),
       gender: optionalStringValue(formData, "gender"),
       phone: stringValue(formData, "phone"),
-      address: stringValue(formData, "address"),
+      address: optionalStringValue(formData, "address"),
       aadhaarLast4: optionalStringValue(formData, "aadhaarLast4"),
       aadhaarPassword: optionalStringValue(formData, "aadhaarPassword"),
-      moveInDate: stringValue(formData, "moveInDate"),
+      moveInDate: optionalStringValue(formData, "moveInDate"),
       emergencyContact: optionalStringValue(formData, "emergencyContact"),
       documentConsent: stringValue(formData, "documentConsent") === "true",
     });
@@ -43,6 +66,7 @@ export async function POST(req: NextRequest) {
       ownerId,
       ...data,
       aadhaarFile,
+      photoFile,
     });
 
     const meta = getRequestMeta(req.headers);

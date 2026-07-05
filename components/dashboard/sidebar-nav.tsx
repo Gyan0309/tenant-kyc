@@ -47,8 +47,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <Sidebar className="border-r border-border bg-card">
-        <SidebarHeader className="flex flex-row items-center border-b border-border px-5 py-4">
+        <SidebarHeader className="flex flex-row items-center justify-between border-b border-border px-4 py-4">
           <SagaLogo subtitle="Property Suite" />
+          <SidebarTrigger className="flex-shrink-0 text-muted-foreground transition-colors hover:text-foreground" />
         </SidebarHeader>
         <SidebarContent className="px-3 py-4">
           <SidebarGroup>
@@ -97,6 +98,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <p className="truncate text-xs font-semibold text-foreground">{user.name}</p>
                 <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{user.email}</p>
               </div>
+              <ThemeToggle className="flex-shrink-0" />
             </div>
           )}
           <Button
@@ -110,19 +112,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="bg-background">
-        <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
-          <div className="flex items-center gap-4">
-            <SidebarTrigger className="text-muted-foreground transition-colors hover:text-foreground" />
-            <div className="h-4 w-px bg-border" />
-            <span className="text-xs text-muted-foreground">
-              Signed in as <span className="font-medium text-foreground">{user?.name || "Manager"}</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              v1.0.0
-            </div>
+        {/* Slim top bar — doubles as the window drag region on desktop (the OS
+            controls overlay sits at its right; app-drag-region reserves space). */}
+        <header className="app-drag-region flex h-11 items-center justify-between border-b border-border bg-card px-6">
+          <span className="text-xs text-muted-foreground">
+            Signed in as <span className="font-medium text-foreground">{user?.name || "Manager"}</span>
+          </span>
+          <div className="app-drag-controls text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            v1.0.0
           </div>
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 p-6 md:p-8">{children}</main>

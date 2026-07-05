@@ -127,19 +127,22 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Desktop shell: reserve space for the custom title-bar strip (34px). Only the
-   dashboard has top-anchored chrome + a fixed sidebar that need offsetting;
-   centered pages (auth, 404, error) sit under the transparent strip fine. */
-html.desktop-chrome {
-  --titlebar-h: 34px;
+/* Desktop shell: the app's own top bar is the window drag region, and the
+   native window-controls overlay (min/max/close) floats at its right. */
+.desktop-chrome .app-drag-region {
+  -webkit-app-region: drag;
+  padding-right: 140px; /* clear space for the OS window controls */
 }
-.desktop-chrome [data-slot="sidebar-wrapper"] {
-  margin-top: var(--titlebar-h);
-  min-height: calc(100svh - var(--titlebar-h));
+/* Interactive elements inside the drag region must opt out of dragging. */
+.desktop-chrome .app-drag-region a,
+.desktop-chrome .app-drag-region button,
+.desktop-chrome .app-drag-region input,
+.desktop-chrome .app-drag-region select {
+  -webkit-app-region: no-drag;
 }
-.desktop-chrome [data-slot="sidebar-container"] {
-  top: var(--titlebar-h);
-  height: calc(100svh - var(--titlebar-h));
+/* A thin drag strip for pages without their own top bar (auth, errors). */
+.desktop-chrome .app-drag-strip {
+  -webkit-app-region: drag;
 }
 
 @layer base {

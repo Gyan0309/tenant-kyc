@@ -50,23 +50,44 @@ export async function removePdfPasswordIfPresent(
 
     if (!password) {
       throw new PdfPasswordError(
-        "This PDF is password protected. Please provide its password.",
+        "This Aadhaar PDF is password protected. Tick “password protected” and enter its password.",
       );
     }
 
     const authenticated = doc.authenticatePassword(password);
     // Return codes: 0 = failed. Non-zero = success (user and/or owner password).
     if (!authenticated) {
-      throw new PdfPasswordError("The password for this PDF is incorrect.");
+      throw new PdfPasswordError(
+        "The Aadhaar PDF password is incorrect. Please re-enter it and try again.",
+      );
     }
 
     const pdf = doc.asPDF();
-    if (!pdf) return buffer;
+    if (!pdf) {
+      throw new PdfPasswordError(
+        "Could not unlock this PDF. Please check the file and password.",
+      );
+    }
 
     // `encrypt=none` is required — MuPDF keeps the existing encryption on save
     // by default, which would leave the stored copy password protected.
-    const out = pdf.saveToBuffer("encrypt=none,garbage=3");
-    return Buffer.from(out.asUint8Array());
+    const out = Buffer.from(pdf.saveToBuffer("encrypt=none,garbage=3").asUint8Array());
+
+    // Safety net: never store a file that is still encrypted. Re-open the
+    // decrypted output and confirm it no longer needs a password.
+    let check: import("mupdf").Document | null = null;
+    try {
+      check = mupdf.Document.openDocument(new Uint8Array(out), "application/pdf");
+      if (check.needsPassword()) {
+        throw new PdfPasswordError(
+          "The Aadhaar could not be fully decrypted, so it was not saved.",
+        );
+      }
+    } finally {
+      check?.destroy();
+    }
+
+    return out;
   } catch (err) {
     if (err instanceof PdfPasswordError) throw err;
     // Any other MuPDF failure (corrupt file, unsupported): surface a clear error.

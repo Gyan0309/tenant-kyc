@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Building2, Users, MapPin } from "lucide-react";
+import { TenantSearch } from "@/components/dashboard/tenant-search";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -44,20 +45,19 @@ export default async function DashboardPage() {
   const propertyDetails = properties.map((p) => {
     const rooms = roomsByProperty.get(p.rowKey) ?? [];
 
+    // A room counts as occupied if it has any tenant (OCCUPIED or PARTIAL);
+    // only a fully empty room is vacant.
     let pOccupied = 0;
     let pVacant = 0;
-    let pPartial = 0;
     for (const r of rooms) {
-      if (r.status === "OCCUPIED") pOccupied++;
-      else if (r.status === "PARTIAL") pPartial++;
-      else pVacant++;
+      if (r.status === "VACANT") pVacant++;
+      else pOccupied++;
     }
 
     return {
       ...p,
       roomsCount: rooms.length,
       occupiedRooms: pOccupied,
-      partialRooms: pPartial,
       vacantRooms: pVacant,
       tenantsCount: tenantsByProperty.get(p.rowKey) ?? 0,
     };
@@ -65,11 +65,10 @@ export default async function DashboardPage() {
 
   const totalRooms = propertyDetails.reduce((sum, p) => sum + p.roomsCount, 0);
   const occupiedRoomsCount = propertyDetails.reduce((sum, p) => sum + p.occupiedRooms, 0);
-  const partialRoomsCount = propertyDetails.reduce((sum, p) => sum + p.partialRooms, 0);
   const totalTenants = propertyDetails.reduce((sum, p) => sum + p.tenantsCount, 0);
 
-  const occupancyRate = totalRooms > 0 
-    ? Math.round(((occupiedRoomsCount + partialRoomsCount * 0.5) / totalRooms) * 100) 
+  const occupancyRate = totalRooms > 0
+    ? Math.round((occupiedRoomsCount / totalRooms) * 100)
     : 0;
 
   return (
@@ -89,6 +88,9 @@ export default async function DashboardPage() {
          Add property
         </Link>
       </div>
+
+      {/* Search tenants by name or room number */}
+      <TenantSearch />
 
       {/* Stats Grid - Three horizontal cards */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -133,7 +135,7 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-3xl font-semibold leading-none text-foreground">{occupancyRate}%</div>
             <p className="mt-2 text-xs text-muted-foreground">
-              {occupiedRoomsCount + partialRoomsCount} of {totalRooms} rooms occupied
+              {occupiedRoomsCount} of {totalRooms} rooms occupied
             </p>
           </CardContent>
         </Card>
@@ -174,9 +176,9 @@ export default async function DashboardPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {propertyDetails.map((p) => {
-              // Occupancy calculation for property
-              const pOccupancy = p.roomsCount > 0 
-                ? Math.round(((p.occupiedRooms + p.partialRooms * 0.5) / p.roomsCount) * 100) 
+              // Occupancy = share of rooms that have at least one tenant.
+              const pOccupancy = p.roomsCount > 0
+                ? Math.round((p.occupiedRooms / p.roomsCount) * 100)
                 : 0;
 
               // Dynamically classify categories

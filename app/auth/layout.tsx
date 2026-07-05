@@ -8,6 +8,8 @@ export default function AuthLayout({
 }) {
   return (
     <div className="auth-surface relative flex min-h-screen w-full flex-col items-center justify-center px-4 py-10">
+      {/* Draggable strip for the frameless desktop window (empty area, no-op in browser). */}
+      <div className="app-drag-strip fixed inset-x-0 top-0 z-30 h-9" />
       <ThemeToggle className="fixed bottom-4 right-4 z-50 border border-border bg-card" />
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-8 flex justify-center">
