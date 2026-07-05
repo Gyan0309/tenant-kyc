@@ -13,16 +13,12 @@ export const DOC_TYPES = [
 ] as const;
 export type DocType = (typeof DOC_TYPES)[number];
 
-export const DOC_SOURCES = ["DIGILOCKER", "MANUAL_UPLOAD"] as const;
+export const DOC_SOURCES = ["MANUAL_UPLOAD"] as const;
 export type DocSource = (typeof DOC_SOURCES)[number];
 
 export const CONSENT_ACTIONS = [
-  "AADHAAR_CONSENT_GIVEN",
   "DOCUMENT_UPLOADED",
   "PERSON_DELETED",
   "DATA_ERASURE_REQUESTED",
 ] as const;
 export type ConsentAction = (typeof CONSENT_ACTIONS)[number];
-
-export const SESSION_STATUSES = ["PENDING", "COMPLETED", "EXPIRED"] as const;
-export type SessionStatus = (typeof SESSION_STATUSES)[number];

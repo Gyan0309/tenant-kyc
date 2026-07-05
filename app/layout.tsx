@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tenant KYC Platform",
-  description: "Property and tenant management with DigiLocker verification",
+  title: "Tenant Manager",
+  description: "Property and tenant management with manual document storage",
 };
 
 export default function RootLayout({

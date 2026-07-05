@@ -28,12 +28,9 @@ import {
   ArrowLeft, 
   Phone, 
   Calendar, 
-  User, 
-  ShieldCheck, 
   FileText, 
   UploadCloud, 
   Users, 
-  Trash2, 
   Lock,
   Eye,
   CheckCircle2
@@ -147,7 +144,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
         <div className="size-10 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" />
-        <p className="text-sm text-slate-500 font-medium">Loading compliance report…</p>
+        <p className="text-sm text-slate-500 font-medium">Loading tenant record...</p>
       </div>
     );
   }
@@ -250,16 +247,16 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
           {/* Documents Card */}
           <Card className="swiss-card shadow-xs">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base font-bold text-slate-900 dark:text-white leading-none">Verification Documents</CardTitle>
+              <CardTitle className="text-base font-bold text-slate-900 dark:text-white leading-none">Tenant Documents</CardTitle>
               <CardDescription className="text-xs text-slate-500 mt-1.5 leading-normal">
-                Strict compliance storage. Links expire automatically in 1 hour.
+                Private Azure Blob files are streamed through authenticated app routes.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {tenant.documents.length === 0 ? (
                 <div className="text-center py-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
                   <FileText className="size-8 text-slate-300 mx-auto mb-2" />
-                  <p className="text-xs text-slate-500 font-medium">No verified documents available.</p>
+                  <p className="text-xs text-slate-500 font-medium">No documents uploaded yet.</p>
                 </div>
               ) : (
                 tenant.documents.map((d) => (
@@ -274,7 +271,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
                       <div>
                         <p className="font-bold text-slate-900 dark:text-slate-200 text-sm leading-none">{d.docType}</p>
                         <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-semibold">
-                          {d.source} · {d.isVerified ? "Verified" : "Manual upload"}
+                          {formatSource(d.source)} · {d.isVerified ? "Verified" : "Manual file"}
                         </p>
                       </div>
                     </div>
@@ -295,7 +292,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
           {/* Dotted border upload card */}
           <Card className="swiss-card shadow-xs">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold text-slate-900 dark:text-white leading-none">Upload Supplementary Document</CardTitle>
+              <CardTitle className="text-base font-bold text-slate-900 dark:text-white leading-none">Upload Another Document</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={uploadDocument} className="space-y-4">
@@ -351,8 +348,8 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
           {/* Audit Log Vertical Timeline */}
           <Card className="swiss-card shadow-xs">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base font-bold text-slate-900 dark:text-white leading-none">KYC Verification Audit Log</CardTitle>
-              <CardDescription className="text-xs text-slate-500 mt-1">Compliance history under DPDP guidelines.</CardDescription>
+              <CardTitle className="text-base font-bold text-slate-900 dark:text-white leading-none">Document Audit Log</CardTitle>
+              <CardDescription className="text-xs text-slate-500 mt-1">Consent and record history under DPDP guidelines.</CardDescription>
             </CardHeader>
             <CardContent className="px-6 pb-6">
               <div className="relative pl-6 border-l border-slate-200 dark:border-slate-800 space-y-6">
@@ -360,20 +357,20 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
                 <div className="relative">
                   <div className="absolute -left-[30px] top-1 bg-emerald-600 border-4 border-white dark:border-slate-950 size-4.5 rounded-full" />
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    DigiLocker Consent & Fetch <CheckCircle2 className="size-3 text-emerald-600" />
+                    Tenant Consent Recorded <CheckCircle2 className="size-3 text-emerald-600" />
                   </h4>
                   <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                    Tenant granted official access to Aadhaar credentials. Auditable OAuth2 verification session created.
+                    Tenant provided the Aadhaar document for occupancy records.
                   </p>
                 </div>
                 {/* Step 2 */}
                 <div className="relative">
                   <div className="absolute -left-[30px] top-1 bg-emerald-600 border-4 border-white dark:border-slate-950 size-4.5 rounded-full" />
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    Cryptographic Identity Matching <CheckCircle2 className="size-3 text-emerald-600" />
+                    Private Blob Storage <CheckCircle2 className="size-3 text-emerald-600" />
                   </h4>
                   <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                    Verified name, DOB, and address boundaries. Extracted masked Aadhaar reference codes.
+                    Aadhaar scan stored in the private tenant document container.
                   </p>
                 </div>
                 {/* Step 3 */}
@@ -381,7 +378,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
                   <div className="absolute -left-[30px] top-1 bg-indigo-600 border-4 border-white dark:border-slate-950 size-4.5 rounded-full" />
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Owner Sign-off & Registry Log</h4>
                   <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                    Tenant record committed to registry. Verified stamp logged at {tenant.verifiedAt ? new Date(tenant.verifiedAt).toLocaleString() : new Date().toLocaleString()}.
+                    Tenant record committed to Azure Table Storage on {tenant.verifiedAt ? new Date(tenant.verifiedAt).toLocaleString() : "manual entry"}.
                   </p>
                 </div>
               </div>
@@ -401,7 +398,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
                   "text-xs font-bold border-slate-200 dark:border-slate-800 hover:bg-slate-100 flex items-center gap-2"
                 )}
               >
-                <Users className="size-4 text-slate-400" /> Add Roommate via DigiLocker
+                <Users className="size-4 text-slate-400" /> Add Roommate
               </Link>
             </CardContent>
           </Card>
@@ -414,7 +411,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
             </div>
             
             <p className="text-xs text-rose-800/80 dark:text-rose-500/80 leading-relaxed">
-              Under section 12 of the DPDP Act 2023, data principals have the right to erase all digital personal details upon cessation of purpose. Processing an erasure request deletes identity logs, masks, uploaded images, and verification timestamps from all active Azure tables and blob storages permanently.
+              Under section 12 of the DPDP Act 2023, data principals have the right to erase digital personal details upon cessation of purpose. Processing an erasure request records the request and prepares uploaded identity documents for removal from active Azure storage.
             </p>
             
             <div className="flex flex-wrap gap-3 pt-2">
@@ -438,4 +435,9 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
       </div>
     </div>
   );
+}
+
+function formatSource(source: string): string {
+  if (source === "MANUAL_UPLOAD") return "Manual upload";
+  return source;
 }

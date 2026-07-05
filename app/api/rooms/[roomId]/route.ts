@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { findRoomById, getRoom, updateRoom } from "@/lib/azure/repos/rooms";
+import { findRoomById, updateRoom } from "@/lib/azure/repos/rooms";
 import { requireOwner } from "@/lib/auth/session";
 import { updateRoomSchema } from "@/lib/types/validation";
 import { handleApiError, jsonError } from "@/lib/api/errors";

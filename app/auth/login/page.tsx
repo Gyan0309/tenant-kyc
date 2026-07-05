@@ -52,7 +52,7 @@ function LoginForm() {
         </div>
         <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">Sign in</CardTitle>
         <CardDescription className="text-slate-500 font-medium text-xs">
-          Access the Tenant KYC portal.
+          Access the tenant management portal.
         </CardDescription>
       </CardHeader>
       
@@ -60,9 +60,7 @@ function LoginForm() {
         <CardContent className="space-y-5 p-0">
           {error && (
             <p className="text-xs text-rose-600 font-bold leading-normal">
-              {error === "digilocker_not_configured"
-                ? "DigiLocker is not configured yet. Please check environment variables."
-                : "Authentication error. Please try again."}
+              Authentication error. Please try again.
             </p>
           )}
           
@@ -120,7 +118,7 @@ function LoginForm() {
           </Button>
           
           <div className="text-xs text-center text-slate-500 font-medium">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/auth/register" className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline underline-offset-4">
               Register company
             </Link>

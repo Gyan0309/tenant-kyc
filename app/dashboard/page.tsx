@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Building2, ShieldCheck, MapPin, Plus } from "lucide-react";
+import { Building2, Users, MapPin, Plus } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -20,14 +20,6 @@ export default async function DashboardPage() {
   
   // Fetch properties
   const properties = await listPropertiesByOwner(ownerId);
-
-  // Compute stats
-  let totalRooms = 0;
-  let occupiedRoomsCount = 0;
-  let partialRoomsCount = 0;
-  let vacantRoomsCount = 0;
-  let totalTenants = 0;
-  let verifiedTenants = 0;
 
   const propertyDetails = await Promise.all(
     properties.map(async (p) => {
@@ -41,16 +33,14 @@ export default async function DashboardPage() {
         if (r.status === "OCCUPIED") pOccupied++;
         else if (r.status === "PARTIAL") pPartial++;
         else pVacant++;
-
-        const persons = await listPersonsByRoom(r.rowKey);
-        totalTenants += persons.length;
-        verifiedTenants += persons.filter((pe) => pe.isVerified).length;
       }
 
-      totalRooms += rooms.length;
-      occupiedRoomsCount += pOccupied;
-      partialRoomsCount += pPartial;
-      vacantRoomsCount += pVacant;
+      const tenantCounts = await Promise.all(
+        rooms.map(async (r) => {
+          const persons = await listPersonsByRoom(r.rowKey);
+          return persons.length;
+        }),
+      );
 
       return {
         ...p,
@@ -58,16 +48,18 @@ export default async function DashboardPage() {
         occupiedRooms: pOccupied,
         partialRooms: pPartial,
         vacantRooms: pVacant,
+        tenantsCount: tenantCounts.reduce((sum, count) => sum + count, 0),
       };
     })
   );
 
+  const totalRooms = propertyDetails.reduce((sum, p) => sum + p.roomsCount, 0);
+  const occupiedRoomsCount = propertyDetails.reduce((sum, p) => sum + p.occupiedRooms, 0);
+  const partialRoomsCount = propertyDetails.reduce((sum, p) => sum + p.partialRooms, 0);
+  const totalTenants = propertyDetails.reduce((sum, p) => sum + p.tenantsCount, 0);
+
   const occupancyRate = totalRooms > 0 
     ? Math.round(((occupiedRoomsCount + partialRoomsCount * 0.5) / totalRooms) * 100) 
-    : 0;
-
-  const kycRate = totalTenants > 0 
-    ? Math.round((verifiedTenants / totalTenants) * 100) 
     : 0;
 
   return (
@@ -77,7 +69,7 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Properties Overview</h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 leading-relaxed">
-            Manage your rental assets and monitor real-time tenant DigiLocker verification.
+            Manage rental assets, rooms, tenants, and uploaded identity documents.
           </p>
         </div>
         <Link 
@@ -137,22 +129,16 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Card 3: KYC Verification Rate (horizontal progress bar) */}
+        {/* Card 3: Active tenants */}
         <Card className="swiss-card shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">KYC Verified Rate</CardTitle>
-            <ShieldCheck className="size-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Active Tenants</CardTitle>
+            <Users className="size-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none">{kycRate}%</div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div 
-                className="bg-emerald-600 h-full rounded-full transition-all duration-300"
-                style={{ width: `${kycRate}%` }}
-              />
-            </div>
+          <CardContent>
+            <div className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none">{totalTenants}</div>
             <p className="text-[10px] text-slate-400 font-medium">
-              {verifiedTenants} of {totalTenants} occupants verified
+              Tenant records with private document storage
             </p>
           </CardContent>
         </Card>
@@ -167,7 +153,7 @@ export default async function DashboardPage() {
             <Building2 className="size-12 text-slate-400 dark:text-slate-700 mb-4" />
             <CardTitle className="text-base text-slate-700 dark:text-slate-300 font-semibold">No properties registered</CardTitle>
             <CardDescription className="text-slate-500 dark:text-slate-500 text-xs mt-1 mb-6 max-w-sm">
-              Create your first property to start adding rooms and initiating tenant verifications.
+              Create your first property to start adding rooms and tenant records.
             </CardDescription>
             <Link 
               href="/dashboard/properties/new" 

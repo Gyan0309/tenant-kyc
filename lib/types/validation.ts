@@ -1,21 +1,8 @@
 import { z } from "zod";
 import {
-  DOC_TYPES,
   PERSON_ROLES,
   ROOM_STATUSES,
 } from "./enums";
-
-const maskedAadhaarSchema = z
-  .string()
-  .optional()
-  .refine(
-    (val) => {
-      if (!val) return true;
-      if (/^\d{12}$/.test(val.replace(/\s/g, ""))) return false;
-      return true;
-    },
-    { message: "Full 12-digit Aadhaar numbers are not allowed" },
-  );
 
 export const registerOwnerSchema = z.object({
   name: z.string().min(2).max(100),
@@ -53,41 +40,19 @@ export const updateRoomSchema = z.object({
   floor: z.number().int().optional(),
 });
 
-export const digilockerInitiateSchema = z.object({
+export const createManualTenantSchema = z.object({
   roomId: z.string().startsWith("ROOM-"),
   propertyId: z.string().startsWith("PROP-"),
-  role: z.enum(PERSON_ROLES).default("PRIMARY"),
-  verifiedMobile: z.string().regex(/^\d{10}$/).optional(),
-  contactPhone: z.string().regex(/^\d{10}$/).optional(),
-});
-
-export const aadhaarOtpInitiateSchema = z.object({
-  roomId: z.string().startsWith("ROOM-"),
-  propertyId: z.string().startsWith("PROP-"),
-  role: z.enum(PERSON_ROLES).default("PRIMARY"),
-  aadhaarNumber: z.string().regex(/^\d{12}$/),
-  contactPhone: z.string().regex(/^\d{10}$/).optional(),
-  consent: z.literal(true),
-});
-
-export const aadhaarOtpVerifySchema = z.object({
-  state: z.string().min(1),
-  otp: z.string().regex(/^\d{6}$/),
-});
-
-export const createTenantSchema = z.object({
-  roomId: z.string().startsWith("ROOM-"),
-  propertyId: z.string().startsWith("PROP-"),
-  sessionState: z.string().min(1),
-  phone: z.string().min(10).max(15).optional(),
+  phone: z.string().min(10).max(15),
   moveInDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   emergencyContact: z.string().optional(),
   role: z.enum(PERSON_ROLES).default("PRIMARY"),
-  name: z.string().min(1).optional(),
+  name: z.string().min(1).max(160),
   dob: z.string().optional(),
   gender: z.string().optional(),
-  address: z.string().optional(),
-  maskedAadhaar: maskedAadhaarSchema,
+  address: z.string().min(1).max(800),
+  aadhaarLast4: z.string().regex(/^\d{4}$/).optional(),
+  documentConsent: z.literal(true),
 });
 
 export const updateTenantSchema = z.object({

@@ -8,7 +8,7 @@ export function ConsentBanner() {
       <div className="space-y-1 flex-1">
         <AlertTitle className="font-bold text-xs uppercase tracking-wider text-indigo-800 dark:text-indigo-300">Consent & Purpose Notice</AlertTitle>
         <AlertDescription className="text-xs text-indigo-700/80 dark:text-indigo-500 leading-relaxed mt-1">
-          Tenant identity data is collected solely for KYC verification and property occupancy records, in compliance with the Digital Personal Data Protection (DPDP) Act. Only masked Aadhaar numbers are stored. The tenant must complete DigiLocker consent on their own device.
+          Tenant identity data is collected solely for property occupancy records, in compliance with the Digital Personal Data Protection (DPDP) Act. Store only the Aadhaar document and a masked reference, after the tenant has provided consent.
         </AlertDescription>
       </div>
     </Alert>

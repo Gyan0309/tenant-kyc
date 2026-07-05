@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import type { RoomStatus } from "@/lib/types/enums";
-import { ShieldCheck, ShieldAlert, Bed, UserCheck } from "lucide-react";
+import { ShieldCheck, FileText, Bed, UserCheck } from "lucide-react";
 
 export function RoomStatusBadge({ status }: { status: RoomStatus }) {
   if (status === "OCCUPIED") {
@@ -28,13 +28,13 @@ export function VerifiedBadge({ verified }: { verified: boolean }) {
   if (verified) {
     return (
       <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50 font-semibold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit rounded-full px-3 py-1 shadow-none">
-        <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" /> DigiLocker Verified
+        <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" /> Officially Verified
       </Badge>
     );
   }
   return (
-    <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50 font-semibold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit rounded-full px-3 py-1 shadow-none">
-      <ShieldAlert className="size-3.5 text-red-600 dark:text-red-400" /> Unverified
+    <Badge className="bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800 font-semibold text-[10px] uppercase tracking-wider flex items-center gap-1 w-fit rounded-full px-3 py-1 shadow-none">
+      <FileText className="size-3.5 text-slate-500 dark:text-slate-400" /> Manual Document
     </Badge>
   );
 }

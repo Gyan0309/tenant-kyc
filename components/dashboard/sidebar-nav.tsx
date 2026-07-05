@@ -48,7 +48,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="border-b border-slate-100 dark:border-slate-800 px-6 py-4.5 flex flex-row items-center gap-3">
           <Shield className="stroke-indigo-600 fill-none size-5.5 stroke-[2]" />
           <div>
-            <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight leading-none block">TenantKYC</span>
+            <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight leading-none block">TenantManager</span>
             <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5">Management Suite</span>
           </div>
         </SidebarHeader>

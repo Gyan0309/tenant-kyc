@@ -26,10 +26,9 @@ Copy `.env.example` to `.env.local` and set:
 | Variable | Notes |
 |----------|--------|
 | `AUTH_SECRET` / `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
-| `ENCRYPTION_KEY` | 64 hex chars: `openssl rand -hex 32` |
-| `AZURE_TABLE_CONNECTION_STRING` | Azurite defaults in `.env.example` |
-| `AZURE_STORAGE_CONNECTION_STRING` | Azurite defaults in `.env.example` |
-| Sandbox KYC vars | `SANDBOX_API_KEY`, `SANDBOX_API_SECRET`, `SANDBOX_BASE_URL` — see [sandbox-kyc-integration.md](./sandbox-kyc-integration.md) |
+| `AZURE_TABLE_CONNECTION_STRING` | Azure Table Storage or Azurite table connection string |
+| `AZURE_STORAGE_CONNECTION_STRING` | Azure Blob Storage or Azurite blob connection string |
+| `AZURE_BLOB_CONTAINER_DOCS` | Optional, defaults to `tenant-documents` |
 
 ## 3. Bootstrap Azure resources
 
@@ -37,7 +36,7 @@ Copy `.env.example` to `.env.local` and set:
 npm run bootstrap
 ```
 
-Creates tables: `Owners`, `Properties`, `Rooms`, `Persons`, `Documents`, `ConsentLogs`, `Sessions`, and blob containers `tenant-documents`, `property-assets`.
+Creates tables: `Owners`, `Properties`, `Rooms`, `Persons`, `Documents`, `ConsentLogs`, and blob containers `tenant-documents`, `property-assets`.
 
 ## 4. Run the app
 
@@ -53,4 +52,4 @@ Open [http://localhost:3000](http://localhost:3000), register an owner account, 
 - Move secrets to Azure Key Vault
 - Use a real Azure Storage account connection string
 - Set `AUTH_URL` to your production domain
-- Use production Sandbox KYC credentials and `https://api.sandbox.co.in`
+- Keep Aadhaar document containers private

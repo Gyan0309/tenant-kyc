@@ -8,7 +8,6 @@ export interface ConsentLogInput {
   action: ConsentAction;
   ipAddress?: string;
   userAgent?: string;
-  digilockerRequestId?: string;
   partitionKeyOverride?: string;
 }
 
@@ -41,7 +40,6 @@ export async function appendConsentLog(
     ipAddress: input.ipAddress ?? "",
     userAgent: input.userAgent ?? "",
     timestamp,
-    digilockerRequestId: input.digilockerRequestId ?? "",
   });
 }
 
@@ -50,5 +48,7 @@ export function scheduleBlobDeletion(
   _blobKeys: string[],
   _reason: string,
 ): void {
+  void _blobKeys;
+  void _reason;
   // TODO: integrate with Azure Functions / queue for legal retention window
 }

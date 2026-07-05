@@ -1,103 +1,103 @@
-import { getOAuthSessionForOwner } from "@/lib/azure/repos/sessions";
-import { createPerson } from "@/lib/azure/repos/persons";
-import { createDocument } from "@/lib/azure/repos/documents";
+import { createPerson, softDeletePerson } from "@/lib/azure/repos/persons";
+import { createDocument, softDeleteDocument } from "@/lib/azure/repos/documents";
 import { findRoomById } from "@/lib/azure/repos/rooms";
 import {
-  copyBlob,
   deleteBlob,
   getDocsContainer,
+  uploadBuffer,
 } from "@/lib/azure/blobs";
 import { recalculateRoomStatus } from "@/lib/rooms/status";
-import { appendConsentLog } from "@/lib/consent/log";
 import { newTenantId } from "@/lib/ids";
-import type { DigilockerProfilePayload } from "@/lib/azure/repos/sessions";
 import type { PersonRole } from "@/lib/types/enums";
 
-export interface CreateTenantInput {
+export interface CreateManualTenantInput {
   ownerId: string;
   roomId: string;
   propertyId: string;
-  sessionState: string;
-  phone?: string;
+  phone: string;
   moveInDate: string;
   emergencyContact?: string;
   role: PersonRole;
-  name?: string;
+  name: string;
   dob?: string;
   gender?: string;
-  address?: string;
-  maskedAadhaar?: string;
+  address: string;
+  aadhaarLast4?: string;
+  aadhaarFile: File;
 }
 
-export async function createTenantFromSession(input: CreateTenantInput) {
+export async function createTenantFromManualUpload(input: CreateManualTenantInput) {
   const room = await findRoomById(input.roomId);
-  if (!room || room.ownerId !== input.ownerId) {
+  if (!room || room.ownerId !== input.ownerId || room.propertyId !== input.propertyId) {
     throw new Error("Room not found");
   }
 
-  const session = await getOAuthSessionForOwner(
-    input.ownerId,
-    input.sessionState,
-  );
-  if (!session || session.status !== "COMPLETED" || !session.profilePayload) {
-    throw new Error("DigiLocker verification session invalid or expired");
-  }
-
-  const profile = JSON.parse(
-    session.profilePayload,
-  ) as DigilockerProfilePayload;
-
-  const container = getDocsContainer();
   const tenantId = newTenantId();
+  const container = getDocsContainer();
+  const blobKey = `docs/${tenantId}/aadhaar.${fileExtension(input.aadhaarFile.name)}`;
+  const buffer = Buffer.from(await input.aadhaarFile.arrayBuffer());
+  let uploaded = false;
+  let personCreated = false;
+  let documentId = "";
 
-  const finalPhotoKey = profile.photoBlobKey
-    ? `persons/${tenantId}/photo.jpg`
-    : "";
+  try {
+    await uploadBuffer(
+      container,
+      blobKey,
+      buffer,
+      input.aadhaarFile.type || "application/octet-stream",
+    );
+    uploaded = true;
 
-  if (profile.photoBlobKey) {
-    await copyBlob(container, profile.photoBlobKey, finalPhotoKey);
-    await deleteBlob(container, profile.photoBlobKey);
-  }
+    const person = await createPerson({
+      rowKey: tenantId,
+      roomId: input.roomId,
+      propertyId: input.propertyId,
+      ownerId: input.ownerId,
+      role: input.role,
+      name: input.name,
+      dob: input.dob ?? "",
+      gender: input.gender ?? "",
+      maskedAadhaar: input.aadhaarLast4 ? `XXXX XXXX ${input.aadhaarLast4}` : "",
+      phone: input.phone,
+      address: input.address,
+      photoBlobKey: "",
+      isVerified: false,
+      verifiedAt: "",
+      moveInDate: input.moveInDate,
+      emergencyContact: input.emergencyContact ?? "",
+    });
+    personCreated = true;
 
-  let finalXmlKey = "";
-  if (profile.aadhaarXmlBlobKey) {
-    finalXmlKey = `docs/${tenantId}/aadhaar.xml.enc`;
-    await copyBlob(container, profile.aadhaarXmlBlobKey, finalXmlKey);
-    await deleteBlob(container, profile.aadhaarXmlBlobKey);
-  }
-
-  const person = await createPerson({
-    rowKey: tenantId,
-    roomId: input.roomId,
-    propertyId: input.propertyId,
-    ownerId: input.ownerId,
-    role: input.role,
-    name: input.name ?? profile.name,
-    dob: input.dob ?? profile.dob,
-    gender: input.gender ?? profile.gender,
-    maskedAadhaar: input.maskedAadhaar ?? profile.maskedAadhaar,
-    phone: input.phone || profile.phone || "",
-    address: input.address ?? profile.address,
-    photoBlobKey: finalPhotoKey,
-    isVerified: true,
-    verifiedAt: new Date().toISOString(),
-    moveInDate: input.moveInDate,
-    emergencyContact: input.emergencyContact ?? "",
-  });
-
-  if (finalXmlKey) {
-    await createDocument({
+    const document = await createDocument({
       personId: person.rowKey,
       roomId: input.roomId,
       ownerId: input.ownerId,
       docType: "AADHAAR",
-      blobKey: finalXmlKey,
-      isVerified: true,
-      source: "DIGILOCKER",
+      blobKey,
+      isVerified: false,
+      source: "MANUAL_UPLOAD",
     });
+    documentId = document.rowKey;
+
+    await recalculateRoomStatus(input.propertyId, input.roomId, room.capacity);
+
+    return { person, document };
+  } catch (err) {
+    if (documentId) {
+      await softDeleteDocument(tenantId, documentId).catch(() => undefined);
+    }
+    if (personCreated) {
+      await softDeletePerson(input.roomId, tenantId).catch(() => undefined);
+    }
+    if (uploaded) {
+      await deleteBlob(container, blobKey).catch(() => undefined);
+    }
+    throw err;
   }
+}
 
-  await recalculateRoomStatus(input.propertyId, input.roomId, room.capacity);
-
-  return { person, profile };
+function fileExtension(fileName: string): string {
+  const ext = fileName.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return ext || "bin";
 }

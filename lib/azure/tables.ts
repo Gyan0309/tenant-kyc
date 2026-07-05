@@ -7,7 +7,6 @@ export const TABLE_NAMES = [
   "Persons",
   "Documents",
   "ConsentLogs",
-  "Sessions",
 ] as const;
 
 export type TableName = (typeof TABLE_NAMES)[number];

@@ -5,15 +5,9 @@ import { listPersonsByRoom } from "@/lib/azure/repos/persons";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { RoomStatusBadge } from "@/components/status-badge";
-import { ArrowLeft, Phone, Plus, Calendar, BadgeCheck, ShieldAlert, ChevronRight, User } from "lucide-react";
+import { ArrowLeft, Phone, Plus, Calendar, FileText, User } from "lucide-react";
 
 export default async function RoomPage({
   params,
@@ -25,18 +19,7 @@ export default async function RoomPage({
   const ownerId = session!.user!.id;
 
   const room = await findRoomById(roomId);
-  console.log("DIAGNOSTIC RoomPage:", {
-    paramPropertyId: propertyId,
-    paramRoomId: roomId,
-    sessionOwnerId: ownerId,
-    foundRoom: room ? {
-      rowKey: room.rowKey,
-      propertyId: room.propertyId,
-      ownerId: room.ownerId,
-    } : null
-  });
   if (!room || room.ownerId !== ownerId || room.propertyId !== propertyId) {
-    console.log("DIAGNOSTIC RoomPage: Check failed, calling notFound()");
     notFound();
   }
 
@@ -89,7 +72,7 @@ export default async function RoomPage({
               href={`/dashboard/properties/${propertyId}/rooms/${roomId}/add-person`}
               className="text-xs text-indigo-600 hover:text-indigo-700 underline font-semibold mt-1.5 inline-block"
             >
-              Add first tenant via DigiLocker
+              Add first tenant
             </Link>
           </Card>
         ) : (
@@ -131,17 +114,17 @@ export default async function RoomPage({
                     {/* Metadata columns */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-xs border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 pt-4 lg:pt-0 lg:pl-8 flex-1">
                       <div>
-                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider leading-none">Verification</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider leading-none">Documents</p>
                         <p className="mt-1.5 font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                           {p.isVerified ? (
                             <>
-                              <BadgeCheck className="size-4 text-emerald-600 dark:text-emerald-400" /> 
-                              <span className="text-emerald-700 dark:text-emerald-400">DigiLocker</span>
+                              <FileText className="size-4 text-emerald-600 dark:text-emerald-400" />
+                              <span className="text-emerald-700 dark:text-emerald-400">Verified</span>
                             </>
                           ) : (
                             <>
-                              <ShieldAlert className="size-4 text-slate-400" />
-                              <span className="text-slate-500 font-semibold">Unverified</span>
+                              <FileText className="size-4 text-slate-400" />
+                              <span className="text-slate-500 font-semibold">Manual file</span>
                             </>
                           )}
                         </p>
@@ -171,7 +154,7 @@ export default async function RoomPage({
                           "text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold text-xs border-indigo-200 hover:border-indigo-300 dark:border-indigo-800 dark:hover:border-indigo-700 px-4 py-2 hover:bg-indigo-50/50"
                         )}
                       >
-                        View Verification Report
+                        View Tenant Record
                       </Link>
                       <a
                         href={`tel:${p.phone}`}

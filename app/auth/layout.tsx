@@ -81,7 +81,7 @@ export default function AuthLayout({
             <Shield className="size-5" />
           </div>
           <div>
-            <span className="font-extrabold text-lg tracking-tight text-slate-900 uppercase">TenantKYC</span>
+            <span className="font-extrabold text-lg tracking-tight text-slate-900 uppercase">TenantManager</span>
           </div>
         </div>
         

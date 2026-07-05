@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Plus, Bed, Landmark, ShieldCheck, DoorOpen } from "lucide-react";
+import { ArrowLeft, Plus, Bed, Landmark, Users, DoorOpen } from "lucide-react";
 
 export default async function PropertyPage({
   params,
@@ -37,49 +37,22 @@ export default async function PropertyPage({
 
   const rooms = await listRoomsByProperty(propertyId);
 
-  // Stats calculation
-  let occupiedCount = 0;
-  let partialCount = 0;
-  let vacantCount = 0;
-  let totalCapacity = 0;
-  let activeOccupants = 0;
-  let verifiedOccupants = 0;
-
   const roomDetails = await Promise.all(
     rooms.map(async (room) => {
       const persons = await listPersonsByRoom(room.rowKey);
-      activeOccupants += persons.length;
-      verifiedOccupants += persons.filter((p) => p.isVerified).length;
-      totalCapacity += room.capacity;
-
-      const unverifiedCount = persons.filter((p) => !p.isVerified).length;
-      
-      let verificationStatus: "VERIFIED" | "PENDING" | "ACTION_REQUIRED" | "VACANT" = "VACANT";
-      if (persons.length > 0) {
-        if (unverifiedCount === 0) {
-          verificationStatus = "VERIFIED";
-        } else if (persons.some((p) => p.role === "PRIMARY" && !p.isVerified)) {
-          verificationStatus = "ACTION_REQUIRED";
-        } else {
-          verificationStatus = "PENDING";
-        }
-      }
-
-      if (room.status === "OCCUPIED") occupiedCount++;
-      else if (room.status === "PARTIAL") partialCount++;
-      else vacantCount++;
-
       return {
         ...room,
         currentOccupants: persons.length,
-        verificationStatus,
       };
     })
   );
 
-  const kycRate = activeOccupants > 0 
-    ? Math.round((verifiedOccupants / activeOccupants) * 100) 
-    : 0;
+  const vacantCount = roomDetails.filter((room) => room.status === "VACANT").length;
+  const totalCapacity = roomDetails.reduce((sum, room) => sum + room.capacity, 0);
+  const activeOccupants = roomDetails.reduce(
+    (sum, room) => sum + room.currentOccupants,
+    0,
+  );
 
   return (
     <div className="space-y-8">
@@ -148,12 +121,12 @@ export default async function PropertyPage({
 
         <Card className="swiss-card shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Verified KYC</CardTitle>
-            <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Tenant Records</CardTitle>
+            <Users className="size-4 text-indigo-600 dark:text-indigo-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">{kycRate}%</div>
-            <p className="text-[10px] text-slate-400 mt-1 font-medium">{verifiedOccupants} of {activeOccupants} verified</p>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">{activeOccupants}</div>
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">Active tenant document records</p>
           </CardContent>
         </Card>
       </div>
@@ -163,7 +136,7 @@ export default async function PropertyPage({
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-bold text-slate-900 dark:text-white leading-tight tracking-tight">Room Configurations</CardTitle>
           <CardDescription className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
-            Click view to manage occupants, verify Aadhaar documents, and run KYC.
+            Click view to manage occupants and uploaded Aadhaar documents.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -204,16 +177,13 @@ export default async function PropertyPage({
                       </TableCell>
                       <TableCell className="font-bold text-slate-800 dark:text-slate-200 text-xs py-3.5">₹{room.monthlyRent}</TableCell>
                       <TableCell className="py-3.5">
-                        {room.verificationStatus === "VERIFIED" && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50">Verified</span>
+                        {room.status === "OCCUPIED" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50">Occupied</span>
                         )}
-                        {room.verificationStatus === "PENDING" && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50">Pending Verification</span>
+                        {room.status === "PARTIAL" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50">Partial</span>
                         )}
-                        {room.verificationStatus === "ACTION_REQUIRED" && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/50">Action Required</span>
-                        )}
-                        {room.verificationStatus === "VACANT" && (
+                        {room.status === "VACANT" && (
                           <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-200/60 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">Vacant</span>
                         )}
                       </TableCell>

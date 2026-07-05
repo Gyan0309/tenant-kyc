@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Electron main-process + packaging tooling. These run in Node's CommonJS
+    // context (require/module.exports), not the Next.js app bundle, so the
+    // app's TS/Next lint rules do not apply.
+    "electron/**",
+    "scripts/postbuild-standalone.mjs",
+    "dist-desktop/**",
   ]),
 ]);
 
