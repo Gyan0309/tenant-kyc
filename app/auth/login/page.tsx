@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Lock, ArrowRight, ShieldCheck } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -45,82 +45,77 @@ function LoginForm() {
   const error = searchParams.get("error");
 
   return (
-    <Card className="border-2 border-slate-900 bg-white p-6 md:p-8 rounded-none shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] w-full">
-      <CardHeader className="space-y-1 p-0 pb-6">
-        <div className="bg-slate-900 p-2 text-white mb-4 rounded-none w-fit">
-          <ShieldCheck className="size-6" strokeWidth={2} />
-        </div>
-        <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">Sign in</CardTitle>
-        <CardDescription className="text-slate-500 font-medium text-xs">
-          Access the tenant management portal.
+    <Card className="w-full rounded-2xl border border-border/70 bg-card p-7 shadow-[0_8px_40px_-12px_rgb(0_0_0/0.12)]">
+      <CardHeader className="space-y-1.5 p-0 pb-6">
+        <CardTitle className="font-heading text-xl font-semibold tracking-tight text-foreground">
+          Welcome back
+        </CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
+          Sign in to your property workspace.
         </CardDescription>
       </CardHeader>
-      
+
       <form onSubmit={onSubmit}>
-        <CardContent className="space-y-5 p-0">
+        <CardContent className="space-y-4 p-0">
           {error && (
-            <p className="text-xs text-rose-600 font-bold leading-normal">
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
               Authentication error. Please try again.
             </p>
           )}
-          
+
           {/* Email Address */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="block text-xs uppercase tracking-wider font-bold text-slate-900">
-              Email Address
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-xs font-medium text-foreground">
+              Email address
             </Label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Mail className="w-4 h-4" />
-              </span>
-              <Input 
-                id="email" 
-                name="email" 
-                type="email" 
+              <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
                 placeholder="name@organization.com"
-                required 
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-none text-slate-900 placeholder-slate-400 font-medium text-sm transition-all focus-visible:ring-0 focus-visible:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                required
+                className="swiss-focus h-11 pl-9 text-sm"
               />
             </div>
           </div>
-          
+
           {/* Password */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="password" className="block text-xs uppercase tracking-wider font-bold text-slate-900">
-                Password
-              </Label>
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-xs font-medium text-foreground">
+              Password
+            </Label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Lock className="w-4 h-4" />
-              </span>
-              <Input 
-                id="password" 
-                name="password" 
-                type="password" 
+              <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="password"
+                name="password"
+                type="password"
                 placeholder="••••••••"
-                required 
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-none text-slate-900 placeholder-slate-400 font-medium text-sm transition-all focus-visible:ring-0 focus-visible:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                required
+                className="swiss-focus h-11 pl-9 text-sm"
               />
             </div>
           </div>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-4 mt-6 p-0">
-          <Button 
-            type="submit" 
-            className="group w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 px-4 rounded-none transition-all duration-150 flex items-center justify-center gap-2 active:translate-y-0.5 shadow-none border-none"
+        <CardFooter className="mt-6 flex flex-col gap-4 p-0">
+          <Button
+            type="submit"
+            className="group h-11 w-full gap-2 rounded-lg bg-brand text-brand-foreground hover:bg-brand/90"
             disabled={loading}
           >
-            <span>{loading ? "Signing in…" : "Continue to Dashboard"}</span>
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <span>{loading ? "Signing in…" : "Sign in"}</span>
           </Button>
-          
-          <div className="text-xs text-center text-slate-500 font-medium">
+
+          <div className="text-center text-xs text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/register" className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline underline-offset-4">
-              Register company
+            <Link
+              href="/auth/register"
+              className="font-medium text-brand underline-offset-4 hover:underline"
+            >
+              Register
             </Link>
           </div>
         </CardFooter>
@@ -132,8 +127,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="flex justify-center p-8 bg-white border border-slate-200">
-        <p className="text-sm text-slate-500 animate-pulse font-medium">Loading auth credentials…</p>
+      <div className="flex justify-center rounded-2xl border border-border/70 bg-card p-8">
+        <p className="animate-pulse text-sm text-muted-foreground">Loading…</p>
       </div>
     }>
       <LoginForm />

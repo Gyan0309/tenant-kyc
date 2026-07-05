@@ -1,4 +1,4 @@
-import { getTableClient } from "@/lib/azure/tables";
+import { getTableClient, odataValue } from "@/lib/azure/tables";
 import { newRoomId } from "@/lib/ids";
 import type { RoomStatus } from "@/lib/types/enums";
 
@@ -47,7 +47,21 @@ export async function listRoomsByProperty(
   const client = getTableClient("Rooms");
   const results: RoomEntity[] = [];
   const iter = client.listEntities<RoomEntity>({
-    queryOptions: { filter: `PartitionKey eq '${propertyId}'` },
+    queryOptions: { filter: `PartitionKey eq '${odataValue(propertyId)}'` },
+  });
+  for await (const entity of iter) {
+    results.push(entity as RoomEntity);
+  }
+  return results;
+}
+
+// All rooms for an owner in a single query. Used by the dashboard to avoid a
+// per-property round trip (grouped by propertyId in memory by the caller).
+export async function listRoomsByOwner(ownerId: string): Promise<RoomEntity[]> {
+  const client = getTableClient("Rooms");
+  const results: RoomEntity[] = [];
+  const iter = client.listEntities<RoomEntity>({
+    queryOptions: { filter: `ownerId eq '${odataValue(ownerId)}'` },
   });
   for await (const entity of iter) {
     results.push(entity as RoomEntity);
@@ -71,7 +85,7 @@ export async function getRoom(
 export async function findRoomById(roomId: string): Promise<RoomEntity | null> {
   const client = getTableClient("Rooms");
   const iter = client.listEntities<RoomEntity>({
-    queryOptions: { filter: `RowKey eq '${roomId}'` },
+    queryOptions: { filter: `RowKey eq '${odataValue(roomId)}'` },
   });
   for await (const entity of iter) {
     return entity as RoomEntity;

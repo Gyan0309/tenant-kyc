@@ -11,6 +11,14 @@ export const TABLE_NAMES = [
 
 export type TableName = (typeof TABLE_NAMES)[number];
 
+// Escape a value for safe interpolation into an OData filter string.
+// Table Storage has no parameterized queries in the SDK, so any id that
+// originates from a URL/user must have single quotes doubled per the OData
+// spec to prevent filter injection.
+export function odataValue(value: string): string {
+  return value.replace(/'/g, "''");
+}
+
 function getConnectionString(): string {
   const cs = process.env.AZURE_TABLE_CONNECTION_STRING;
   if (!cs) {

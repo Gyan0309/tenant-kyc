@@ -15,7 +15,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Tenant Manager",
-  description: "Property and tenant management with manual document storage",
+  description: "Property and tenant management with secure document storage",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

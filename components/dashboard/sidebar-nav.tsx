@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Home, LogOut, Shield } from "lucide-react";
+import { Building2, Home, LogOut } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
+import { SagaLogo } from "@/components/brand";
 import {
   Sidebar,
   SidebarContent,
@@ -24,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Properties", icon: Home },
-  { href: "/dashboard/properties/new", label: "Add Property", icon: Building2 },
+  // { href: "/dashboard/properties/new", label: "Add Property", icon: Building2 },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -44,17 +45,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar className="border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-        <SidebarHeader className="border-b border-slate-100 dark:border-slate-800 px-6 py-4.5 flex flex-row items-center gap-3">
-          <Shield className="stroke-indigo-600 fill-none size-5.5 stroke-[2]" />
-          <div>
-            <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight leading-none block">TenantManager</span>
-            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5">Management Suite</span>
-          </div>
+      <Sidebar className="border-r border-border bg-card">
+        <SidebarHeader className="flex flex-row items-center border-b border-border px-5 py-4">
+          <SagaLogo subtitle="Property Suite" />
         </SidebarHeader>
         <SidebarContent className="px-3 py-4">
           <SidebarGroup>
-            <SidebarGroupLabel className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider px-3 mb-2">
+            <SidebarGroupLabel className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Navigation
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -67,19 +64,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   return (
                     <SidebarMenuItem key={item.href} className="relative flex items-center">
                       {isActive && (
-                        <div className="absolute left-1 w-1 h-6 bg-indigo-600 rounded-full z-10" />
+                        <div className="absolute left-0 z-10 h-5 w-0.5 rounded-full bg-brand" />
                       )}
                       <SidebarMenuButton
                         render={<Link href={item.href} />}
                         isActive={isActive}
                         className={cn(
-                          "w-full flex items-center gap-3 pl-4 pr-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                          "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
                           isActive
-                            ? "bg-slate-100 text-slate-900 font-semibold dark:bg-slate-900 dark:text-slate-100 shadow-none"
-                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+                            ? "bg-accent text-foreground"
+                            : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                         )}
                       >
-                        <item.icon className="size-4 flex-shrink-0" />
+                        <item.icon className={cn("size-4 flex-shrink-0", isActive && "text-brand")} />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -89,42 +86,42 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter className="border-t border-slate-100 dark:border-slate-800 p-4 space-y-4">
+        <SidebarFooter className="space-y-3 border-t border-border p-3">
           {user && (
             <div className="flex items-center gap-3 px-2 py-1">
-              <div className="size-9 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 flex items-center justify-center text-xs font-bold shadow-xs">
+              <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-full bg-brand text-xs font-semibold text-brand-foreground">
                 {initials}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{user.name}</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">{user.email}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-foreground">{user.name}</p>
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{user.email}</p>
               </div>
             </div>
           )}
           <Button
             variant="ghost"
-            className="w-full justify-start text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-red-400 hover:text-red-600 px-3 transition-colors text-xs font-semibold"
+            className="w-full justify-start px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             onClick={() => signOut({ callbackUrl: "/auth/login" })}
           >
-            <LogOut className="size-4 mr-2" />
+            <LogOut className="mr-2 size-4" />
             Sign out
           </Button>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="bg-slate-50/50 dark:bg-slate-900/50">
-        <header className="flex h-14 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6">
+      <SidebarInset className="bg-background">
+        <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
           <div className="flex items-center gap-4">
-            <SidebarTrigger className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors" />
-            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Active Session: <span className="font-semibold text-slate-700 dark:text-slate-300">{user?.name || "Manager"}</span>
+            <SidebarTrigger className="text-muted-foreground transition-colors hover:text-foreground" />
+            <div className="h-4 w-px bg-border" />
+            <span className="text-xs text-muted-foreground">
+              Signed in as <span className="font-medium text-foreground">{user?.name || "Manager"}</span>
             </span>
           </div>
-          <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-            V1.0.0
+          <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            v1.0.0
           </div>
         </header>
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">{children}</main>
+        <main className="mx-auto w-full max-w-7xl flex-1 p-6 md:p-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

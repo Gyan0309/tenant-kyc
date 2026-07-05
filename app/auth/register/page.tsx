@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, Mail, Lock, ArrowRight, ShieldCheck } from "lucide-react";
+import { User, Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -63,93 +63,89 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card className="border-2 border-slate-900 bg-white p-6 md:p-8 rounded-none shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] w-full">
-      <CardHeader className="space-y-1 p-0 pb-6">
-        <div className="bg-slate-900 p-2 text-white mb-4 rounded-none w-fit">
-          <ShieldCheck className="size-6" strokeWidth={2} />
-        </div>
-        <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">Create account</CardTitle>
-        <CardDescription className="text-slate-500 font-medium text-xs">
-          Register to manage properties and verify tenants
+    <Card className="w-full rounded-2xl border border-border/70 bg-card p-7 shadow-[0_8px_40px_-12px_rgb(0_0_0/0.12)]">
+      <CardHeader className="space-y-1.5 p-0 pb-6">
+        <CardTitle className="font-heading text-xl font-semibold tracking-tight text-foreground">
+          Create your workspace
+        </CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
+          Register an owner account to manage properties and tenants.
         </CardDescription>
       </CardHeader>
-      
+
       <form onSubmit={onSubmit}>
         <CardContent className="space-y-4 p-0">
           {/* Full Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="block text-xs uppercase tracking-wider font-bold text-slate-900">
-              Full Name
+          <div className="space-y-1.5">
+            <Label htmlFor="name" className="text-xs font-medium text-foreground">
+              Full name
             </Label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <User className="w-4 h-4" />
-              </span>
-              <Input 
-                id="name" 
-                name="name" 
-                placeholder="John Doe"
-                required 
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-none text-slate-900 placeholder-slate-400 font-medium text-sm transition-all focus-visible:ring-0 focus-visible:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+              <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="name"
+                name="name"
+                placeholder="Jane Doe"
+                required
+                className="swiss-focus h-11 pl-9 text-sm"
               />
             </div>
           </div>
 
           {/* Email Address */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="block text-xs uppercase tracking-wider font-bold text-slate-900">
-              Email Address
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-xs font-medium text-foreground">
+              Email address
             </Label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Mail className="w-4 h-4" />
-              </span>
-              <Input 
-                id="email" 
-                name="email" 
-                type="email" 
+              <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
                 placeholder="name@organization.com"
-                required 
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-none text-slate-900 placeholder-slate-400 font-medium text-sm transition-all focus-visible:ring-0 focus-visible:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                required
+                className="swiss-focus h-11 pl-9 text-sm"
               />
             </div>
           </div>
-          
+
           {/* Password */}
-          <div className="space-y-2">
-            <Label htmlFor="password" className="block text-xs uppercase tracking-wider font-bold text-slate-900">
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-xs font-medium text-foreground">
               Password
             </Label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Lock className="w-4 h-4" />
-              </span>
-              <Input 
-                id="password" 
-                name="password" 
-                type="password" 
+              <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="password"
+                name="password"
+                type="password"
                 placeholder="Min. 8 characters"
-                minLength={8} 
-                required 
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-none text-slate-900 placeholder-slate-400 font-medium text-sm transition-all focus-visible:ring-0 focus-visible:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                minLength={8}
+                required
+                className="swiss-focus h-11 pl-9 text-sm"
               />
             </div>
           </div>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-4 mt-6 p-0">
-          <Button 
-            type="submit" 
-            className="group w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 px-4 rounded-none transition-all duration-150 flex items-center justify-center gap-2 active:translate-y-0.5 shadow-none border-none"
+        <CardFooter className="mt-6 flex flex-col gap-4 p-0">
+          <Button
+            type="submit"
+            className="group h-11 w-full gap-2 rounded-lg bg-brand text-brand-foreground hover:bg-brand/90"
             disabled={loading}
           >
-            <span>{loading ? "Creating account…" : "Register Owner Account"}</span>
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <span>{loading ? "Creating account…" : "Create account"}</span>
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
-          
-          <div className="text-xs text-center text-slate-500 font-medium">
+
+          <div className="text-center text-xs text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/auth/login" className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline underline-offset-4">
+            <Link
+              href="/auth/login"
+              className="font-medium text-brand underline-offset-4 hover:underline"
+            >
               Sign in
             </Link>
           </div>

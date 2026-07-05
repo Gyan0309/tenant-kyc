@@ -1,4 +1,4 @@
-import { getTableClient } from "@/lib/azure/tables";
+import { getTableClient, odataValue } from "@/lib/azure/tables";
 import { newDocumentId } from "@/lib/ids";
 import type { DocSource, DocType } from "@/lib/types/enums";
 
@@ -55,6 +55,26 @@ export async function listDocumentsByPerson(
     results.push(doc);
   }
   return results;
+}
+
+// Look up a document by its id alone (used by the document-serving routes,
+// which only receive the docId). Escapes the filter value to prevent OData
+// injection; callers must still verify ownerId before returning the blob.
+export async function findDocumentById(
+  docId: string,
+): Promise<DocumentEntity | null> {
+  const client = getTableClient("Documents");
+  const iter = client.listEntities<DocumentEntity>({
+    queryOptions: { filter: `RowKey eq '${odataValue(docId)}'` },
+  });
+  for await (const entity of iter) {
+    const doc = entity as DocumentEntity;
+    const deletedAt = (doc.deletedAt as unknown as string) || "";
+    if (deletedAt) return null;
+    doc.deletedAt = null;
+    return doc;
+  }
+  return null;
 }
 
 export async function getDocument(

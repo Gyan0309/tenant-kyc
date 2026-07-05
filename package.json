@@ -2,6 +2,7 @@
   "name": "tenant-manager",
   "version": "0.1.0",
   "private": true,
+  "author": "SAGA",
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
@@ -9,6 +10,7 @@
     "start": "next start",
     "lint": "eslint",
     "bootstrap": "tsx scripts/bootstrap.ts",
+    "gen:icon": "node scripts/generate-icon.mjs",
     "build:desktop": "next build && node scripts/postbuild-standalone.mjs",
     "desktop": "electron electron/main.js",
     "dist": "npm run build:desktop && electron-builder",
@@ -23,8 +25,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
-    "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
+    "mupdf": "^1.28.0",
     "next": "16.2.6",
     "next-auth": "^5.0.0-beta.31",
     "next-themes": "^0.4.6",
@@ -37,6 +39,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
@@ -46,12 +49,13 @@
     "electron-builder": "^25.1.8",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "png-to-ico": "^2.1.8",
     "tailwindcss": "^4",
     "tsx": "^4.22.1",
     "typescript": "^5"
   },
   "build": {
-    "appId": "se.betabridge.tenantmanager",
+    "appId": "com.saga.propertysuite",
     "productName": "Tenant Manager",
     "directories": {
       "output": "dist-desktop",
@@ -71,12 +75,14 @@
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "build-resources/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Tenant Manager"
     }
   }
 }

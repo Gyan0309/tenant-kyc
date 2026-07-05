@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   // Pin the file-tracing root to this project so the standalone trace is
   // deterministic regardless of parent lockfiles on the build machine.
   outputFileTracingRoot: path.join(__dirname),
+  // MuPDF's WASM binary is loaded at runtime by the Aadhaar PDF decryptor and
+  // isn't picked up by static import tracing — include it explicitly so it
+  // ships in the standalone/packaged build.
+  outputFileTracingIncludes: {
+    "/api/tenants": ["./node_modules/mupdf/dist/**"],
+  },
 };
 
 export default nextConfig;

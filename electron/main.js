@@ -10,8 +10,17 @@ if (!app.requestSingleInstanceLock()) {
 
 let mainWindow = null;
 let serverChild = null;
+let appUrl = null;
 
-function createWindow(url) {
+function resolveIcon() {
+  // Shipped only in dev/unpacked; packaged windows inherit the exe icon.
+  const p = path.join(__dirname, "..", "build-resources", "icon.png");
+  return require("node:fs").existsSync(p) ? p : undefined;
+}
+
+// Create the window up front and show a local splash immediately, so the user
+// sees branding instead of a blank frame while the Next server boots.
+function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 860,
@@ -19,6 +28,8 @@ function createWindow(url) {
     minHeight: 640,
     show: false,
     title: "Tenant Manager",
+    backgroundColor: "#0f1115",
+    icon: resolveIcon(),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -31,15 +42,14 @@ function createWindow(url) {
     mainWindow = null;
   });
 
-  // Open external links (mailto, http to other origins) in the system browser
-  // instead of inside the app shell.
+  // Open external links in the system browser instead of inside the shell.
   mainWindow.webContents.setWindowOpenHandler(({ url: target }) => {
-    if (target.startsWith(url)) return { action: "allow" };
+    if (appUrl && target.startsWith(appUrl)) return { action: "allow" };
     shell.openExternal(target);
     return { action: "deny" };
   });
 
-  mainWindow.loadURL(url);
+  mainWindow.loadFile(path.join(__dirname, "splash.html"));
 }
 
 function showFatal(title, message) {
@@ -84,6 +94,9 @@ async function boot() {
     return;
   }
 
+  // Show the splash window immediately while the server spins up.
+  createWindow();
+
   let serverEntry;
   try {
     serverEntry = resolveServerEntry({
@@ -105,13 +118,14 @@ async function boot() {
       onLog: (line) => process.stdout.write(`[next] ${line}`),
     });
     serverChild = child;
+    appUrl = url;
     child.on("exit", (code) => {
       if (code && code !== 0 && !app.isQuiting) {
         showFatal("Server stopped", `The Tenant Manager server exited unexpectedly (code ${code}).`);
         app.quit();
       }
     });
-    createWindow(url);
+    if (mainWindow) mainWindow.loadURL(url);
   } catch (err) {
     showFatal("Startup error", `The Tenant Manager server failed to start:\n\n${err.message}`);
     app.quit();

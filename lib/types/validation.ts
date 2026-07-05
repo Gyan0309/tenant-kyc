@@ -52,6 +52,7 @@ export const createManualTenantSchema = z.object({
   gender: z.string().optional(),
   address: z.string().min(1).max(800),
   aadhaarLast4: z.string().regex(/^\d{4}$/).optional(),
+  aadhaarPassword: z.string().max(200).optional(),
   documentConsent: z.literal(true),
 });
 

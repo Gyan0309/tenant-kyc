@@ -49,7 +49,8 @@ More detail:
 - [Architecture](docs/architecture.md)
 - [Data and storage model](docs/data-and-storage.md)
 - [Local setup](docs/local-setup.md)
-- [Desktop packaging status](docs/desktop-packaging.md)
+- [Desktop packaging](docs/desktop-packaging.md)
+- [Deployment guide (build → ship → install → configure)](docs/deployment-guide.md)
 
 ## Tech Stack
 

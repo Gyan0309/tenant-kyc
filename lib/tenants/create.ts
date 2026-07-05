@@ -7,6 +7,7 @@ import {
   uploadBuffer,
 } from "@/lib/azure/blobs";
 import { recalculateRoomStatus } from "@/lib/rooms/status";
+import { removePdfPasswordIfPresent } from "@/lib/pdf/decrypt";
 import { newTenantId } from "@/lib/ids";
 import type { PersonRole } from "@/lib/types/enums";
 
@@ -24,6 +25,7 @@ export interface CreateManualTenantInput {
   address: string;
   aadhaarLast4?: string;
   aadhaarFile: File;
+  aadhaarPassword?: string;
 }
 
 export async function createTenantFromManualUpload(input: CreateManualTenantInput) {
@@ -35,7 +37,15 @@ export async function createTenantFromManualUpload(input: CreateManualTenantInpu
   const tenantId = newTenantId();
   const container = getDocsContainer();
   const blobKey = `docs/${tenantId}/aadhaar.${fileExtension(input.aadhaarFile.name)}`;
-  const buffer = Buffer.from(await input.aadhaarFile.arrayBuffer());
+  // Decrypt the Aadhaar PDF if it is password protected, so the stored copy
+  // opens without a password. Throws PdfPasswordError on a missing/wrong
+  // password (mapped to a 400 by the API route). No-op for images.
+  const buffer = await removePdfPasswordIfPresent(
+    Buffer.from(await input.aadhaarFile.arrayBuffer()),
+    input.aadhaarFile.name,
+    input.aadhaarFile.type,
+    input.aadhaarPassword,
+  );
   let uploaded = false;
   let personCreated = false;
   let documentId = "";

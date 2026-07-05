@@ -3,6 +3,7 @@ import { requireOwner } from "@/lib/auth/session";
 import { createManualTenantSchema } from "@/lib/types/validation";
 import { handleApiError, jsonError } from "@/lib/api/errors";
 import { createTenantFromManualUpload } from "@/lib/tenants/create";
+import { PdfPasswordError } from "@/lib/pdf/decrypt";
 import { appendConsentLog, getRequestMeta } from "@/lib/consent/log";
 
 export async function POST(req: NextRequest) {
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
       phone: stringValue(formData, "phone"),
       address: stringValue(formData, "address"),
       aadhaarLast4: optionalStringValue(formData, "aadhaarLast4"),
+      aadhaarPassword: optionalStringValue(formData, "aadhaarPassword"),
       moveInDate: stringValue(formData, "moveInDate"),
       emergencyContact: optionalStringValue(formData, "emergencyContact"),
       documentConsent: stringValue(formData, "documentConsent") === "true",
@@ -58,6 +60,9 @@ export async function POST(req: NextRequest) {
       isVerified: person.isVerified,
     });
   } catch (err) {
+    if (err instanceof PdfPasswordError) {
+      return jsonError(err.message, 400);
+    }
     if (err instanceof Error && err.message.includes("not found")) {
       return jsonError(err.message, 404);
     }

@@ -1,4 +1,4 @@
-import { getTableClient } from "@/lib/azure/tables";
+import { getTableClient, odataValue } from "@/lib/azure/tables";
 import { newTenantId } from "@/lib/ids";
 import type { PersonRole } from "@/lib/types/enums";
 
@@ -61,13 +61,33 @@ export async function listPersonsByRoom(
   const client = getTableClient("Persons");
   const results: PersonEntity[] = [];
   const iter = client.listEntities<PersonEntity>({
-    queryOptions: { filter: `PartitionKey eq '${roomId}'` },
+    queryOptions: { filter: `PartitionKey eq '${odataValue(roomId)}'` },
   });
   for await (const entity of iter) {
     const person = entity as PersonEntity;
     const deletedAt = (person.deletedAt as unknown as string) || "";
     if (!includeDeleted && deletedAt) continue;
     person.deletedAt = deletedAt || null;
+    results.push(person);
+  }
+  return results;
+}
+
+// All active persons for an owner in a single query. Used by the dashboard to
+// replace one query per room when computing tenant totals.
+export async function listPersonsByOwner(
+  ownerId: string,
+): Promise<PersonEntity[]> {
+  const client = getTableClient("Persons");
+  const results: PersonEntity[] = [];
+  const iter = client.listEntities<PersonEntity>({
+    queryOptions: { filter: `ownerId eq '${odataValue(ownerId)}'` },
+  });
+  for await (const entity of iter) {
+    const person = entity as PersonEntity;
+    const deletedAt = (person.deletedAt as unknown as string) || "";
+    if (deletedAt) continue;
+    person.deletedAt = null;
     results.push(person);
   }
   return results;
@@ -93,7 +113,7 @@ export async function findPersonById(
 ): Promise<PersonEntity | null> {
   const client = getTableClient("Persons");
   const iter = client.listEntities<PersonEntity>({
-    queryOptions: { filter: `RowKey eq '${tenantId}'` },
+    queryOptions: { filter: `RowKey eq '${odataValue(tenantId)}'` },
   });
   for await (const entity of iter) {
     const deletedAt = (entity.deletedAt as unknown as string) || "";
