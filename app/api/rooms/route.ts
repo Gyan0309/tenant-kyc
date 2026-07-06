@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createRoom } from "@/lib/azure/repos/rooms";
+import { createRoom, listRoomsByProperty } from "@/lib/azure/repos/rooms";
 import { getProperty } from "@/lib/azure/repos/properties";
 import { requireOwner } from "@/lib/auth/session";
 import { createRoomSchema } from "@/lib/types/validation";
@@ -15,6 +15,13 @@ export async function POST(req: NextRequest) {
 
     const property = await getProperty(ownerId, data.propertyId);
     if (!property) return jsonError("Property not found", 404);
+
+    // Room numbers must be unique within a property (case-insensitive).
+    const existing = await listRoomsByProperty(data.propertyId);
+    const wanted = data.roomNumber.trim().toLowerCase();
+    if (existing.some((r) => r.roomNumber.trim().toLowerCase() === wanted)) {
+      return jsonError(`Room "${data.roomNumber}" already exists in this property`, 409);
+    }
 
     const room = await createRoom(data.propertyId, ownerId, {
       roomNumber: data.roomNumber,

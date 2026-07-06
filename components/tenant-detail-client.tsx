@@ -3,6 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -63,6 +72,7 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [docType, setDocType] = useState<DocType>("PAN");
   const [loading, setLoading] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -115,15 +125,12 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
   }
 
   async function deleteTenant() {
-    if (!confirm("Delete this tenant? This removes them from the room.")) {
-      return;
-    }
-
     const res = await fetch(`/api/tenants/${tenantId}`, { method: "DELETE" });
     if (!res.ok) {
       toast.error("Delete failed");
       return;
     }
+    setDeleteOpen(false);
     toast.success("Tenant deleted");
     router.push(`/dashboard/properties/${tenant?.propertyId}/rooms/${tenant?.roomId}`);
   }
@@ -158,12 +165,33 @@ export function TenantDetailClient({ tenantId }: { tenantId: string }) {
         </Link>
         <Button
           variant="ghost"
-          onClick={() => deleteTenant()}
+          onClick={() => setDeleteOpen(true)}
           className="h-8 gap-1.5 px-3 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
         >
           <Trash2 className="size-3.5" /> Delete tenant
         </Button>
       </div>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete tenant?</DialogTitle>
+            <DialogDescription>
+              This removes {tenant.name} from the room. This can’t be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <Button
+              variant="ghost"
+              onClick={() => deleteTenant()}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Main Grid Section: Asymmetrical Grid (col-span-4 vs col-span-8) */}
       <div className="grid gap-8 lg:grid-cols-12">

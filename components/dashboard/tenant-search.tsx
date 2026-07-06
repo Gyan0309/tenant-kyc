@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Loader2, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -21,25 +21,28 @@ export function TenantSearch() {
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  // Debounced search (~1s) — waits until the user stops typing. State updates
-  // happen in the change handler and the async callback (not synchronously in
-  // the effect body).
+  const runSearch = useCallback(async (q: string) => {
+    if (!q) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/tenants/search?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        setResults(await res.json());
+        setOpen(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Debounced search (~1s) — waits until the user stops typing. Pressing Enter
+  // (below) runs it immediately.
   useEffect(() => {
     const q = query.trim();
     if (!q) return;
-    const handle = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/tenants/search?q=${encodeURIComponent(q)}`);
-        if (res.ok) {
-          setResults(await res.json());
-          setOpen(true);
-        }
-      } finally {
-        setLoading(false);
-      }
-    }, 1000);
+    const handle = setTimeout(() => runSearch(q), 1000);
     return () => clearTimeout(handle);
-  }, [query]);
+  }, [query, runSearch]);
 
   function onChange(value: string) {
     setQuery(value);
@@ -74,6 +77,12 @@ export function TenantSearch() {
         <Input
           value={query}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              runSearch(query.trim());
+            }
+          }}
           onFocus={() => results.length && setOpen(true)}
           placeholder="Search tenants by name or room number…"
           className="swiss-focus h-10 pl-9 pr-9 text-sm"

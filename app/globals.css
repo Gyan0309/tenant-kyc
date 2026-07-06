@@ -127,9 +127,14 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Desktop shell: the app's own top bar is the window drag region, and the
-   native window-controls overlay (min/max/close) floats at its right. */
+/* Desktop shell: an invisible strip is the window drag region, and the native
+   window-controls overlay (min/max/close) floats at its right. It has no height
+   in the browser (no gap) and reserves the control strip only in the app. */
+.app-drag-region {
+  height: 0;
+}
 .desktop-chrome .app-drag-region {
+  height: 2.25rem;
   -webkit-app-region: drag;
   padding-right: 140px; /* clear space for the OS window controls */
 }

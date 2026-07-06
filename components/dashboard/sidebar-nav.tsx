@@ -112,16 +112,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="bg-background">
-        {/* Slim top bar — doubles as the window drag region on desktop (the OS
-            controls overlay sits at its right; app-drag-region reserves space). */}
-        <header className="app-drag-region flex h-11 items-center justify-between border-b border-border bg-card px-6">
-          <span className="text-xs text-muted-foreground">
-            Signed in as <span className="font-medium text-foreground">{user?.name || "Manager"}</span>
-          </span>
-          <div className="app-drag-controls text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            v1.0.0
-          </div>
-        </header>
+        {/* Invisible draggable strip (desktop only): no visible bar, it just
+            holds the OS window controls and lets the frameless window be
+            dragged. Collapses to zero height in the browser. */}
+        <div className="app-drag-region w-full flex-shrink-0" />
         <main className="mx-auto w-full max-w-7xl flex-1 p-6 md:p-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>

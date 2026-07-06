@@ -13,7 +13,13 @@ const nextConfig: NextConfig = {
   // isn't picked up by static import tracing — include it explicitly so it
   // ships in the standalone/packaged build.
   outputFileTracingIncludes: {
-    "/api/tenants": ["./node_modules/mupdf/dist/**"],
+    // MuPDF (Aadhaar decrypt) + Jimp (photo optimize) are loaded at runtime and
+    // aren't fully picked up by static tracing — include them explicitly.
+    "/api/tenants": [
+      "./node_modules/mupdf/dist/**",
+      "./node_modules/jimp/**",
+      "./node_modules/@jimp/**",
+    ],
   },
 };
 
